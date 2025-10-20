@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
-import Barnav from "../components/Navbar";
-import Menu from "../components/Menu";
+import Barnav from "../components/Personal/Navbar";
+import Menu from "../components/Personal/Menu";
 import PuntosScreen from "./PuntosScreen";
 import { useState } from "react";
 import Home from "./Home";

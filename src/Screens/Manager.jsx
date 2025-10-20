@@ -7,19 +7,23 @@ const Manager = () => {
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
 
-    const handleSubmit = () => {}
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        console.log(password)
+    }
 
     return (
         <>
             <div className="flex items-center justify-center min-h-[98svh] md:min-h-[90svh] mt-[-100px]">
                 <div className="card bg-base-300 w-96 shadow-2xl">
-                    <figure>
+                    <figure className="px-8 pt-8">
                         <img
                             src={logo}
+                            className="w-full max-w-xs mx-auto"
                         />
                     </figure>
                     <div className="card-body">
-                        <form className="flex flex-col items-center" action="" onSubmit={handleSubmit}>
+                        <form className="flex flex-col items-center" onSubmit={handleSubmit}>
                             <div className="w-full relative">
                                 <label className="input validator w-full">
                                     <img src={user} alt="" width={20} height={20}/>

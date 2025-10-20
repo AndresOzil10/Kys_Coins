@@ -1,5 +1,5 @@
 import React from 'react'
-import coins from '../assets/png/coins_2.png'
+import coins from '../../assets/png/coins_2.png'
 import TrendingUpIcon from '@mui/icons-material/TrendingUp'
 import TrendingDownIcon from '@mui/icons-material/TrendingDown'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';

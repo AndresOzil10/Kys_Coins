@@ -1,5 +1,5 @@
-import logo from '../assets/images/logo.jpeg'
-import coin from '../assets/png/coins_2.png'
+import logo from '../../assets/images/logo.jpeg'
+import coin from '../../assets/png/coins_2.png'
 
 const Barnav = ({nomina, nombre, onLogout}) => { 
     // Función para cerrar sesión

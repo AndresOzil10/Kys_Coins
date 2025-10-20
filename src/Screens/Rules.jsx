@@ -1,5 +1,5 @@
 import React from 'react';
-import ViewPdf from '../components/ViewPdf'; // Asume que existe; si no, usa el ejemplo abajo
+import ViewPdf from '../components/Personal/ViewPdf'; // Asume que existe; si no, usa el ejemplo abajo
 function Rules() {
   const pdfUrl = '/assets/files/Reglamento.pdf'; // Corregido: Ruta absoluta desde public
   return (
