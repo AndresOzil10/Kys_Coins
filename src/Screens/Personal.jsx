@@ -2,6 +2,7 @@ import logo from '../assets/images/kayser_logo.webp'
 import user from "../assets/gif/user.gif"
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import CustomAlert from '../components/CustomAlert';
 
 const API_URL = import.meta.env.VITE_API_URL; // Renombré para claridad
 
@@ -29,12 +30,14 @@ const Personal = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("") // Para mostrar errores en UI
   const navigate = useNavigate()
+  const [CustomAlertVisible, setCustomAlertVisible] = useState(false)
+    const [customAlertMessage, setCustomAlertMessage] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault() // ¡Clave! Previene el submit por defecto del form (recarga de página)
     
     // Validación básica
-    const nomina = username.trim();
+    const nomina = username.trim()
     if (!nomina || nomina.length < 4 || isNaN(nomina)) {
       setError("Ingresa un número de nómina válido (al menos 4 dígitos).")
       return;
@@ -60,8 +63,12 @@ const Personal = () => {
           } 
         })
       } else {
-        setError("Usuario no encontrado. Verifica tu nómina.")
-        // console.log("API respondió con error:", response); // Debug
+        setCustomAlertVisible(true)
+        setCustomAlertMessage(response.mensaje)
+        setTimeout(() => {
+            setCustomAlertVisible(false)
+            setCustomAlertMessage('')
+        }, 4000)
       }
     } catch (error) {
       setError("Error de conexión. Intenta de nuevo más tarde.")
@@ -111,16 +118,7 @@ const Personal = () => {
                   autoFocus // UX: Enfoca automáticamente
                 />
               </label>
-              {error && ( // Muestra hint solo si hay error
-                <p className="text-error text-sm mt-1 text-left">
-                  {error}
-                </p>
-              )}
-              {!error && ( // Hint por defecto si no hay error
-                <p className="text-xs text-gray-500 mt-1 text-left">
-                  Completa el campo con tu número de nómina
-                </p>
-              )}
+              <CustomAlert CustomAlertVisible={CustomAlertVisible} customAlertMessage={customAlertMessage} />
             </div>
             <button 
               className="btn btn-error btn-block" // Removí btn-soft si no es necesario

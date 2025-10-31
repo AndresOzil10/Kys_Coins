@@ -1,7 +1,7 @@
 import logo from '../../assets/images/logo.jpeg'
 import coin from '../../assets/png/coins_2.png'
 
-const Barnav = ({nomina, nombre, onLogout}) => { 
+const Barnav = ({nomina, nombre}) => { 
     // Función para cerrar sesión
     const handleLogout = () => {
         sessionStorage.clear();

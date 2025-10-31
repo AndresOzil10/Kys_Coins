@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 
 const ShoppStore = () => {
   const [items, setItems] = useState([
@@ -30,6 +30,9 @@ const ShoppStore = () => {
   const [isCartOpen, setIsCartOpen] = useState(false) // Estado para el modal del carrito (opcional, si quieres mantener el modal)
   const [isTooltipOpen, setIsTooltipOpen] = useState(false) // Estado para el tooltip del carrito
   const [loadedImages, setLoadedImages] = useState(new Set()) // Estado para rastrear imágenes cargadas
+  const [searchTerm, setSearchTerm] = useState('') // Estado para el término de búsqueda
+  const [sortOrder, setSortOrder] = useState('')
+  const tooltipRef = useRef(null) // Ref para el tooltip
 
   // Agregar al carrito
   const addToCart = (item) => {
@@ -58,14 +61,75 @@ const ShoppStore = () => {
     setLoadedImages(prev => new Set([...prev, itemId]));
   }
 
+  // Función para abrir el tooltip
+  const openTooltip = () => {
+    setIsTooltipOpen(true);
+  }
+
+  // Función para cerrar el tooltip
+  const closeTooltip = () => {
+    setIsTooltipOpen(false);
+  }
+
+  // useEffect para detectar clics fuera del tooltip
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        closeTooltip();
+      }
+    };
+
+    if (isTooltipOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isTooltipOpen]);
+
+  // Filtrar items basados en el término de búsqueda
+  const filteredAndSortedItems = items
+    .filter(item =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sortOrder === 'asc') {
+        return a.price - b.price;
+      } else if (sortOrder === 'desc') {
+        return b.price - a.price;
+      }
+      return 0; // Sin orden
+    });
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 relative mb-12"> {/* Relative para posicionar el botón flotante */}
       <header className="text-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Tienda Kayser Points</h1>
         <p className="text-gray-600">Elige y compra artículos con tus puntos</p>
-      </header>
+         {/* Buscador y Filtro */}
+        <div className="mt-4 flex justify-between items-center">
+          <input
+            type="text"
+            placeholder="Buscar artículos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="input input-bordered w-full max-w-md"
+          />
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="select select-bordered ml-4"
+          >
+            <option value="">Sin orden</option>
+            <option value="asc">Precio: Menor a Mayor</option>
+            <option value="desc">Precio: Mayor a Menor</option>
+          </select>
+        </div>
+              </header>
 
-      {/* Pre-cargar imágenes ocultas para rastrear carga */}
+              {/* Pre-cargar imágenes ocultas para rastrear carga */}
       <div style={{ display: 'none' }}>
         {items.map((item) => (
           <img
@@ -81,7 +145,7 @@ const ShoppStore = () => {
       {/* Mostrar loading si no todas las imágenes están cargadas */}
       {loadedImages.size === items.length ? (
         <main className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-          {items.map((item) => (
+          {filteredAndSortedItems.map((item) => (
             <div key={item.id} className="card shadow-md hover:shadow-lg transition-shadow">
               <figure>
                 <img
@@ -114,9 +178,8 @@ const ShoppStore = () => {
       <div className="fixed bottom-4 right-4 z-50">
         <button
           className="btn btn-primary btn-circle"
+          onMouseEnter={openTooltip} // Abre el tooltip al pasar el cursor
           onClick={toggleCart}
-          onMouseEnter={() => setIsTooltipOpen(true)}
-          onMouseLeave={() => setIsTooltipOpen(false)}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -126,7 +189,7 @@ const ShoppStore = () => {
 
         {/* Tooltip del carrito */}
         {isTooltipOpen && cart.length > 0 && (
-          <div className="absolute bottom-16 right-0 bg-white border border-gray-300 rounded-lg shadow-lg p-4 w-80 max-h-64 overflow-y-auto">
+          <div ref={tooltipRef} className="absolute bottom-16 right-0 bg-white border border-gray-300 rounded-lg shadow-lg p-4 w-80 max-h-64 overflow-y-auto">
             <h3 className="font-bold text-lg mb-2">Carrito</h3>
             <ul className="space-y-2">
               {cart.map((item) => (
@@ -151,11 +214,23 @@ const ShoppStore = () => {
             >
               Comprar
             </button>
+            <button 
+              className="btn btn-ghost btn-sm mt-2 w-full"
+              onClick={closeTooltip} // Cierra el tooltip
+            >
+              Cerrar
+            </button>
           </div>
         )}
         {isTooltipOpen && cart.length === 0 && (
-          <div className="absolute bottom-16 right-0 bg-white border border-gray-300 rounded-lg shadow-lg p-4 w-40">
+          <div ref={tooltipRef} className="absolute bottom-16 right-0 bg-white border border-gray-300 rounded-lg shadow-lg p-4 w-40">
             <p className="text-sm">No hay productos en el carrito.</p>
+            <button 
+              className="btn btn-ghost btn-sm mt-2 w-full"
+              onClick={closeTooltip} // Cierra el tooltip
+            >
+              Cerrar
+            </button>
           </div>
         )}
       </div>
