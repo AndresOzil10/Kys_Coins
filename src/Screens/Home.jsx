@@ -16,14 +16,10 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Pagination from '@mui/material/Pagination'; // Para paginación
 import Tooltip from '@mui/material/Tooltip'; // Importa Tooltip de MUI
 
-function createData(name, calories, fat, carbs, protein, price) {
+function createData(name, calories) {
   return {
     name,
     calories,
-    fat,
-    carbs,
-    protein,
-    price,
   }
 }
 
@@ -46,10 +42,7 @@ function Row(props) {
         <TableCell component="th" scope="row">
           {row.name}
         </TableCell>
-        <TableCell align="right">{row.calories}</TableCell>
-        <TableCell align="right">{row.fat}</TableCell>
-        <TableCell align="right">{row.carbs}</TableCell>
-        <TableCell align="right">{row.protein}</TableCell>
+        <TableCell align="right"><div aria-label="status" className="status status-xl"></div></TableCell>
       </TableRow>
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
@@ -58,7 +51,9 @@ function Row(props) {
               <Typography variant="h6" gutterBottom component="div">
                 Comentarios
               </Typography>
-              {/* Aquí puedes agregar contenido dinámico para comentarios */}
+              <Typography variant="body2" gutterBottom component="div">
+                Aquí van los comentarios relacionados con la propuesta "{row.name}".
+              </Typography>
             </Box>
           </Collapse>
         </TableCell>
@@ -71,24 +66,20 @@ Row.propTypes = {
   row: PropTypes.shape({
     calories: PropTypes.number.isRequired,
     carbs: PropTypes.number.isRequired,
-    fat: PropTypes.number.isRequired,
-    name: PropTypes.string.isRequired,
-    price: PropTypes.number.isRequired,
-    protein: PropTypes.number.isRequired,
   }).isRequired,
 }
 
 const rows = [
-  createData('Frozen yoghurt', 159, 6.0, 24, 4.0, 3.99),
-  createData('Ice cream sandwich', 237, 9.0, 37, 4.3, 4.99),
-  createData('Eclair', 262, 16.0, 24, 6.0, 3.79),
-  createData('Cupcake', 305, 3.7, 67, 4.3, 2.5),
-  createData('Gingerbread', 356, 16.0, 49, 3.9, 1.5),
-  createData('Frozen', 159, 6.0, 24, 4.0, 3.99),
-  createData('Ice', 237, 9.0, 37, 4.3, 4.99),
-  createData('Ecla', 262, 16.0, 24, 6.0, 3.79),
-  createData('Cup', 305, 3.7, 67, 4.3, 2.5),
-  createData('Ginger', 356, 16.0, 49, 3.9, 1.5),
+  createData('Frozen yoghurt', 159),
+  createData('Ice cream sandwich', 237),
+  createData('Eclair', 262),
+  createData('Cupcake', 305),
+  createData('Gingerbread', 356),
+  createData('Frozen', 159),
+  createData('Ice', 237),
+  createData('Ecla', 262),
+  createData('Cup', 305),
+  createData('Ginger', 355),
 ]
 
 function Home() {
@@ -151,11 +142,8 @@ function Home() {
           <TableHead>
             <TableRow>
               <TableCell />
-              <TableCell>Dessert (100g serving)</TableCell>
-              <TableCell align="right">Calories</TableCell>
-              <TableCell align="right">Fat&nbsp;(g)</TableCell>
-              <TableCell align="right">Carbs&nbsp;(g)</TableCell>
-              <TableCell align="right">Protein&nbsp;(g)</TableCell>
+              <TableCell >Titulo Propuesta</TableCell>
+              <TableCell align="right">Estatus</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
