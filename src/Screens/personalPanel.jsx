@@ -15,7 +15,7 @@ const Panel = () => {
     const renderScreen = () => {
         switch (currentScreen) {
             case 'Home':
-                return <Home />
+                return <Home nombre={nombre} nomina={nomina}/>
             case 'Puntos':
                 return <PuntosScreen />
             case 'Products':

@@ -104,32 +104,50 @@ const ShoppStore = () => {
     });
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 relative mb-12"> {/* Relative para posicionar el botón flotante */}
-      <header className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Tienda Kayser Points</h1>
-        <p className="text-gray-600">Elige y compra artículos con tus puntos</p>
-         {/* Buscador y Filtro */}
-        <div className="mt-4 flex justify-between items-center">
-          <input
-            type="text"
-            placeholder="Buscar artículos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input input-bordered w-full max-w-md"
-          />
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            className="select select-bordered ml-4"
-          >
-            <option value="">Sin orden</option>
-            <option value="asc">Precio: Menor a Mayor</option>
-            <option value="desc">Precio: Mayor a Menor</option>
-          </select>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 relative mb-12">
+      {/* Header Mejorado */}
+      <header className="text-center mb-8 bg-gradient-to-r from-gray-700 to-gray-400 text-white py-8 rounded-2xl shadow-lg">
+        <div className="flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          <h1 className="text-4xl font-bold">Tienda Kayser Points</h1>
         </div>
-              </header>
+        <p className="text-lg opacity-90">Elige y compra artículos con tus puntos</p>
+        <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-4">
+          {/* Buscador */}
+          <div className="relative w-full sm:max-w-md">
+            <input
+              type="text"
+              placeholder="Buscar artículos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input input-bordered w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl shadow-md focus:ring-2 focus:ring-white focus:border-white transition duration-200 text-gray-800"
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
 
-              {/* Pre-cargar imágenes ocultas para rastrear carga */}
+          {/* Filtro de Orden */}
+          <div className="relative w-full sm:max-w-xs">
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="select select-bordered w-full h-12 pl-4 pr-10 py-3 bg-white border border-gray-300 rounded-xl shadow-md focus:ring-2 focus:ring-white focus:border-white transition duration-200 text-gray-800 appearance-none"
+            >
+              <option value="">Sin orden</option>
+              <option value="asc">Precio: Menor a Mayor</option>
+              <option value="desc">Precio: Mayor a Menor</option>
+            </select>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+      </header>
+
+      {/* Pre-cargar imágenes ocultas para rastrear carga */}
       <div style={{ display: 'none' }}>
         {items.map((item) => (
           <img
@@ -144,60 +162,112 @@ const ShoppStore = () => {
 
       {/* Mostrar loading si no todas las imágenes están cargadas */}
       {loadedImages.size === items.length ? (
-        <main className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+        <main className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
           {filteredAndSortedItems.map((item) => (
-            <div key={item.id} className="card shadow-md hover:shadow-lg transition-shadow">
-              <figure>
+            <div key={item.id} className="card bg-white shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-200 rounded-2xl overflow-hidden animate-fade-in">
+              <figure className="relative">
                 <img
                   src={item.image}
                   alt={item.name}
-                  className="w-full h-max object-cover rounded-t-lg"
+                  className="object-cover transition-transform duration-300 hover:scale-110"
                 />
+                <div className="absolute inset-0 bg-opacity-0 hover:bg-opacity-20 transition duration-300 flex items-center justify-center">
+                  <button 
+                    className="btn btn-primary btn-circle opacity-0 hover:opacity-100 transition-opacity duration-300"
+                    onClick={() => addToCart(item)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
               </figure>
-              <div className="card-body p-4">
-                <h2 className="card-title text-lg font-semibold">{item.name}</h2>
-                <p className="text-sm text-gray-600">{item.description}</p>
-                <p className="text-md font-bold mt-2">{item.price} pts.</p>
-                <button 
-                  className="btn btn-primary mt-2 w-full"
-                  onClick={() => addToCart(item)}
-                >
-                  Agregar al carrito
-                </button>
+              <div className="card-body p-5">
+                <h2 className="card-title text-xl font-bold text-gray-800 mb-2">{item.name}</h2>
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-lg font-bold text-blue-600 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    {item.price} pts.
+                  </p>
+                  <button 
+                    className="btn btn-primary bg-gradient-to-r from-gray-700 to-black hover:to-red-600 text-white shadow-md transition duration-200"
+                    onClick={() => addToCart(item)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Agregar
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </main>
       ) : (
         <div className="flex justify-center items-center min-h-[50vh]">
-          <span className="loading loading-spinner loading-lg"></span>
+          <div className="text-center">
+            <span className="loading loading-spinner loading-lg text-blue-500"></span>
+            <p className="mt-4 text-gray-600">Cargando productos...</p>
+          </div>
         </div>
       )}
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-6 mt-12 rounded-t-2xl">
+        <div className="text-center">
+          <p className="text-sm">&copy; 2023 Kayser Points. Todos los derechos reservados.</p>
+          <p className="text-xs mt-2 opacity-75">Compra inteligente, vive mejor.</p>
+        </div>
+      </footer>
 
       {/* Contenedor para el botón y tooltip */}
       <div className="fixed bottom-4 right-4 z-50">
         <button
-          className="btn btn-primary btn-circle"
+          className="btn btn-primary btn-circle shadow-lg hover:shadow-xl transition duration-200"
           onMouseEnter={openTooltip} // Abre el tooltip al pasar el cursor
           onClick={toggleCart}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          {cart.length > 0 && <span className="badge badge-secondary badge-xs absolute top-[-10px] right-[-5px]">{cart.length}</span>}
+          {cart.length > 0 && <span className="badge badge-secondary badge-xs absolute top-[-10px] right-[-5px] animate-pulse">{cart.length}</span>}
         </button>
 
         {/* Tooltip del carrito */}
         {isTooltipOpen && cart.length > 0 && (
-          <div ref={tooltipRef} className="absolute bottom-16 right-0 bg-white border border-gray-300 rounded-lg shadow-lg p-4 w-80 max-h-64 overflow-y-auto">
-            <h3 className="font-bold text-lg mb-2">Carrito</h3>
-            <ul className="space-y-2">
+          <div ref={tooltipRef} className="absolute bottom-16 right-0 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-2xl p-6 w-80 max-h-64 overflow-y-auto">
+            {/* Header del Tooltip */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-lg text-gray-800 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Carrito de Compras
+              </h3>
+              <button
+                onClick={closeTooltip}
+                className="btn btn-circle btn-ghost btn-sm text-gray-500 hover:text-gray-700 transition duration-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Lista de Items */}
+            <ul className="space-y-3 mb-4">
               {cart.map((item) => (
-                <li key={item.id} className="flex items-center space-x-2">
-                  <img src={item.image} alt={item.name} className="w-8 h-8 object-cover rounded" />
-                  <span className="text-sm">{item.name} - {item.price} pts.</span>
+                <li key={item.id} className="flex items-center space-x-3 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200">
+                  <img src={item.image} alt={item.name} className="w-10 h-10 object-cover rounded-md border border-gray-300" />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-gray-800">{item.name}</span>
+                    <p className="text-xs text-gray-600">{item.price} pts.</p>
+                  </div>
                   <button 
-                    className="btn btn-error btn-xs ml-auto"
+                    className="btn btn-error btn-xs btn-circle hover:bg-red-600 transition duration-200"
                     onClick={() => removeFromCart(item.id)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="bi bi-trash3-fill" viewBox="0 0 16 16">
@@ -207,29 +277,72 @@ const ShoppStore = () => {
                 </li>
               ))}
             </ul>
-            <p className="mt-2 font-bold">Total: {total} pts.</p>
-            <button 
-              className="btn btn-success btn-sm mt-2 w-full"
-              onClick={() => alert('Procesando compra...')} // Simulación
-            >
-              Comprar
-            </button>
-            <button 
-              className="btn btn-ghost btn-sm mt-2 w-full"
-              onClick={closeTooltip} // Cierra el tooltip
-            >
-              Cerrar
-            </button>
+
+            {/* Total */}
+            <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200 mb-4">
+              <span className="font-semibold text-gray-800">Total:</span>
+              <span className="font-bold text-lg text-blue-600">{total} pts.</span>
+            </div>
+
+            {/* Botones */}
+            <div className="flex space-x-2">
+              <button 
+                className="btn btn-success btn-sm flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md transition duration-200"
+                onClick={() => alert('Procesando compra...')} // Simulación
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Comprar
+              </button>
+              <button 
+                className="btn btn-ghost btn-sm flex-1 hover:bg-gray-100 transition duration-200"
+                onClick={closeTooltip} // Cierra el tooltip
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         )}
+        
         {isTooltipOpen && cart.length === 0 && (
-          <div ref={tooltipRef} className="absolute bottom-16 right-0 bg-white border border-gray-300 rounded-lg shadow-lg p-4 w-40">
-            <p className="text-sm">No hay productos en el carrito.</p>
+          <div ref={tooltipRef} className="absolute bottom-16 right-0 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-2xl p-6 w-64">
+            {/* Header del Tooltip */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-lg text-gray-800 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Carrito Vacío
+              </h3>
+              <button
+                onClick={closeTooltip}
+                className="btn btn-circle btn-ghost btn-sm text-gray-500 hover:text-gray-700 transition duration-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Contenido */}
+            <div className="text-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <p className="text-sm text-gray-600 font-medium">Tu carrito está vacío.</p>
+              <p className="text-xs text-gray-500 mt-1">¡Agrega algunos productos para comenzar!</p>
+            </div>
+
+            {/* Botón */}
             <button 
-              className="btn btn-ghost btn-sm mt-2 w-full"
+              className="btn btn-primary btn-sm w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md transition duration-200"
               onClick={closeTooltip} // Cierra el tooltip
             >
-              Cerrar
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Continuar Comprando
             </button>
           </div>
         )}
@@ -237,41 +350,73 @@ const ShoppStore = () => {
 
       {/* Modal para carrito (opcional, si quieres mantenerlo para clic) */}
       {isCartOpen && (
-        <div className="fixed inset-0 flex bg-black  items-center justify-center z-50 p-4">
-          <div className="card bg-base-100 w-full max-w-md max-h-[80vh] overflow-y-auto shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Carrito</h2>
-              <ul className="menu">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto border border-gray-200">
+            {/* Header del Modal */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Carrito de Compras
+              </h2>
+              <button
+                onClick={toggleCart}
+                className="btn btn-circle btn-ghost btn-sm text-gray-500 hover:text-gray-700 transition duration-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Cuerpo del Modal */}
+            <div className="p-6">
+              {/* Lista de Items */}
+              <ul className="space-y-4 mb-6">
                 {cart.map((item) => (
-                  <li key={item.id}>
-                    <div className="flex justify-between items-center">
-                      <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
-                      <span>{item.name} - {item.price} pts.</span>
-                      <button 
-                        className="btn btn-error btn-xs"
-                        onClick={() => removeFromCart(item.id)}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-trash3-fill" viewBox="0 0 16 16">
-                          <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/>
-                        </svg>
-                      </button>
+                  <li key={item.id} className="flex items-center space-x-4 p-4 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200">
+                    <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-md border border-gray-300" />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-gray-800">{item.name}</span>
+                      <p className="text-xs text-gray-600">{item.price} pts.</p>
                     </div>
+                    <button 
+                      className="btn btn-error btn-xs btn-circle hover:bg-red-600 transition duration-200"
+                      onClick={() => removeFromCart(item.id)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className="bi bi-trash3-fill" viewBox="0 0 16 16">
+                        <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/>
+                      </svg>
+                    </button>
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 font-bold">Total: {total} pts.</p>
-              <button 
-                className="btn btn-success mt-2 w-full"
-                onClick={() => alert('Procesando compra...')} // Simulación
-              >
-                Comprar
-              </button>
-              <button 
-                className="btn btn-ghost mt-2"
-                onClick={toggleCart} // Cierra el modal
-              >
-                Cerrar
-              </button>
+
+              {/* Total */}
+              <div className="flex justify-between items-center p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6">
+                <span className="font-semibold text-gray-800">Total:</span>
+                <span className="font-bold text-xl text-blue-600">{total} pts.</span>
+              </div>
+
+              {/* Botones */}
+              <div className="flex space-x-3">
+                <button 
+                  className="btn btn-success flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg transition duration-200"
+                  onClick={() => alert('Procesando compra...')} // Simulación
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Comprar Ahora
+                </button>
+                <button 
+                  className="btn btn-outline btn-ghost flex-1 hover:bg-gray-100 transition duration-200"
+                  onClick={toggleCart} // Cierra el modal
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
         </div>
