@@ -58,8 +58,9 @@ const Personal = () => {
         navigate("/personal", { 
           replace: true, 
           state: { 
-            nombre: response.data || response.data, // Ajusta según estructura real de response.data
-            nomina: nomina 
+            nombre: response.data, // Ajusta según estructura real de response.data
+            nomina: nomina,
+            area : response.area
           } 
         })
       } else {

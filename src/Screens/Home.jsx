@@ -16,6 +16,28 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Pagination from '@mui/material/Pagination'; // Para paginación
 import Tooltip from '@mui/material/Tooltip'; // Importa Tooltip de MUI
 import { useLocation } from 'react-router-dom';
+import Swal from 'sweetalert2';
+
+const url = import.meta.env.VITE_API_URL
+
+const enviarData = async (url, data) => {
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!resp.ok) {
+      throw new Error('Error en la respuesta de la API')
+    }
+    return await resp.json();
+  } catch (error) {
+    console.error("Error en la solicitud:", error)
+    throw error
+  }
+}
 
 function createData(name, calories) {
   return {
@@ -85,17 +107,14 @@ const rows = [
 
 function Home() {
   const location = useLocation();
-  const {nombre, nomina } = location.state || {}
+  const {nombre, nomina, area } = location.state || {}
   const [currentPage, setCurrentPage] = useState(1) // Estado para paginación
   const [isModalOpen, setIsModalOpen] = useState(false) // Estado para el modal
-  const [formData, setFormData] = useState({
-    autor: '',
-    fechaCreacion: '',
-    areaTrabajo: '',
-    areaImplementacion: '',
-    tituloIdea: '',
-    descripcion: ''
-  }) // Estado para el formulario
+  const [implementación,setImplementacion]=useState('')
+  const [titulo, setTitulo]=useState('')
+  const [descripcion, setDescripcion]=useState('')
+  const [fechaCreacion, setFechaCreacion]=useState('')
+
   const itemsPerPage = 4 // 4 registros por página
 
   // Filtra los ítems para la página actual
@@ -114,29 +133,40 @@ function Home() {
     setIsModalOpen(!isModalOpen);
     // Limpia el formulario al cerrar
     if (!isModalOpen) {
-      setFormData({
-        autor: '',
-        fechaCreacion: '',
-        areaTrabajo: '',
-        areaImplementacion: '',
-        tituloIdea: '',
-        descripcion: ''
-      });
+      setImplementacion('');
+      setTitulo('');
+      setDescripcion('');
+      setFechaCreacion('');
     }
-
   }
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  }
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aquí puedes enviar los datos a una API o procesarlos
-    console.log('Datos del formulario:', formData);
-    alert('Propuesta enviada exitosamente!');
-    toggleModal(); // Cierra el modal después de enviar
+    const dataToSend = {
+      aksi: "Insert",
+      nn: nomina,
+      autor: nombre,
+      fechaCreacion: fechaCreacion,
+      areaTrabajo: area,
+      areaImplementacion: implementación,
+      titulo: titulo,
+      descripcion: descripcion
+    }
+    
+    try {
+      const response = await enviarData(url, dataToSend)
+      if(response.estado === "success"){
+        Swal.fire({
+          title: response.mensaje,
+          icon: "success",
+          draggable: true
+        });
+        toggleModal(); // Cierra el modal al enviar con éxito
+      }
+      
+    } catch (error) {
+      console.error("Error al enviar los datos:", error)
+    }
   }
 
   return (
@@ -241,8 +271,8 @@ function Home() {
                 <input
                   type="date"
                   name="fechaCreacion"
-                  value={formData.fechaCreacion}
-                  onChange={handleInputChange}
+                  value={fechaCreacion}
+                  onChange={(e) => setFechaCreacion(e.target.value)}
                   required
                   className="input input-bordered input-primary w-full focus:ring-2 focus:ring-green-500 transition duration-200"
                 />
@@ -261,8 +291,8 @@ function Home() {
                 <input
                   type="text"
                   name="areaTrabajo"
-                  value={formData.areaTrabajo}
-                  onChange={handleInputChange}
+                  value={area}
+                  readOnly
                   required
                   className="input input-bordered input-primary w-full focus:ring-2 focus:ring-purple-500 transition duration-200"
                   placeholder="Ingresa el área de trabajo"
@@ -282,8 +312,8 @@ function Home() {
                 <input
                   type="text"
                   name="areaImplementacion"
-                  value={formData.areaImplementacion}
-                  onChange={handleInputChange}
+                  value={implementación}
+                  onChange={(e) => setImplementacion(e.target.value)}
                   required
                   className="input input-bordered input-primary w-full focus:ring-2 focus:ring-orange-500 transition duration-200"
                   placeholder="Ingresa el área de implementación"
@@ -303,8 +333,8 @@ function Home() {
                 <input
                   type="text"
                   name="tituloIdea"
-                  value={formData.tituloIdea}
-                  onChange={handleInputChange}
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
                   required
                   className="input input-bordered input-primary w-full focus:ring-2 focus:ring-red-500 transition duration-200"
                   placeholder="Ingresa el título de la idea"
@@ -323,8 +353,8 @@ function Home() {
                 </label>
                 <textarea
                   name="descripcion"
-                  value={formData.descripcion}
-                  onChange={handleInputChange}
+                  value={descripcion}
+                  onChange={(e) => setDescripcion(e.target.value)}
                   required
                   className="textarea textarea-bordered textarea-primary w-full focus:ring-2 focus:ring-teal-500 transition duration-200 resize-none"
                   placeholder="Ingresa la descripción de la propuesta"

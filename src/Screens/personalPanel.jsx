@@ -9,13 +9,13 @@ import ShoppStore from "./ShoppStore";
 
 const Panel = () => { 
     const location = useLocation();
-    const {nombre, nomina } = location.state || {}
+    const {nombre, nomina, area } = location.state || {}
     const [currentScreen, setCurrentScreen] = useState('Home');
 
     const renderScreen = () => {
         switch (currentScreen) {
             case 'Home':
-                return <Home nombre={nombre} nomina={nomina}/>
+                return <Home nombre={nombre} nomina={nomina} area={area}/>
             case 'Puntos':
                 return <PuntosScreen />
             case 'Products':
