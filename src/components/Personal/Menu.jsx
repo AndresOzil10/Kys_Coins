@@ -4,12 +4,13 @@ import HomeIcon from '@mui/icons-material/Home'
 import PaidIcon from '@mui/icons-material/Paid'
 import RuleIcon from '@mui/icons-material/Rule'
 import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 
 function Menu({ currentScreen, setCurrentScreen }) {
   // Función para manejar cambio de pestaña (sincroniza con props del padre)
   const handleNavigationChange = (event, newValue) => {
     // Validación básica: Solo permite valores esperados
-    if (newValue !== 'Home' && newValue !== 'Puntos' && newValue !== 'Products' && newValue !== 'Reglamento') {
+    if (newValue !== 'Home' && newValue !== 'Puntos' && newValue !== 'Products' && newValue !== 'Reglamento'&& newValue !== 'Pedidos') {
       console.warn(`Valor de navegación inválido: ${newValue}. Ignorando cambio.`)
       return
     }
@@ -51,6 +52,13 @@ function Menu({ currentScreen, setCurrentScreen }) {
           value="Products"
           icon={<ShoppingBasketIcon />} // Icono blanco
           aria-label="Navegar a sección Purchase"
+        />
+        <BottomNavigationAction
+          key="Pedidos"
+          label="Pedidos"
+          value="Pedidos"
+          icon={<LocalShippingIcon />} // Icono blanco
+          aria-label="Navegar a sección Pedidos"
         />
         <BottomNavigationAction
           key="Reglamento"

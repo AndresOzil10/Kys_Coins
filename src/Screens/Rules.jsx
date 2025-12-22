@@ -1,7 +1,7 @@
 import React from 'react';
 import ViewPdf from '../components/Personal/ViewPdf'; // Asume que existe; si no, usa el ejemplo abajo
 function Rules() {
-  const pdfUrl = '/assets/files/Reglamento.pdf'; // Corregido: Ruta absoluta desde public
+  const pdfUrl = 'kyspoints/assets/files/Reglamento.pdf'; // Corregido: Ruta absoluta desde public
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 p-2 sm:p-4"> {/* Responsivo: Padding adaptativo, altura completa */}
       {/* Header con título */}

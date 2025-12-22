@@ -6,6 +6,7 @@ import { useState } from "react";
 import Home from "./Home";
 import Rules from "./Rules";
 import ShoppStore from "./ShoppStore";
+import Orders from "./Orders";
 
 const Panel = () => { 
     const location = useLocation();
@@ -17,11 +18,13 @@ const Panel = () => {
             case 'Home':
                 return <Home nombre={nombre} nomina={nomina} area={area}/>
             case 'Puntos':
-                return <PuntosScreen />
+                return <PuntosScreen nomina={nomina}/>
             case 'Products':
-                return <ShoppStore />
+                return <ShoppStore nomina={nomina}/>
             case 'Reglamento':
                 return <Rules />
+            case 'Pedidos':
+                return <Orders />
             default:
                 return 
         }

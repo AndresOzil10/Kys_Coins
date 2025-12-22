@@ -3,6 +3,8 @@ import BarNav from '../components/Manager/BarNav'
 import { useLocation } from 'react-router-dom'
 import HomeManager from './HomeManager'
 import MenuManager from '../components/Manager/MenuManager'
+import Allproposals from './Allproposals'
+import UpdateImages from './UpdateImages'
 
 function ManagerPanel() {
     const location = useLocation()
@@ -13,8 +15,10 @@ function ManagerPanel() {
         switch (currentScreen) {
             case 'Home':
                 return <HomeManager />
+            case 'All':
+                return <Allproposals />
             case 'Images':
-                return <PuntosScreen />
+                return <UpdateImages />
             default:
                 return 
         }

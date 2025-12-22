@@ -1,7 +1,7 @@
 {
   "name": "kys_coins",
   "private": true,
-  "homepage": "http://127.0.0.1/kys_coins/",
+  "homepage": "http://127.0.0.1/kyspoints/",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -17,6 +17,7 @@
     "@mui/icons-material": "^7.3.3",
     "@mui/material": "^7.3.3",
     "@tailwindcss/vite": "^4.1.12",
+    "framer-motion": "^12.23.25",
     "pdfjs-dist": "^5.4.149",
     "primereact": "^10.9.7",
     "react": "^19.1.1",

@@ -1,14 +1,56 @@
+import { use, useEffect, useState } from 'react';
 import logo from '../../assets/images/logo.jpeg'
 import coin from '../../assets/png/coins_2.png'
 
+const url = import.meta.env.VITE_API_URL
+
+const enviarData = async (url, data) => {
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!resp.ok) {
+      throw new Error('Error en la respuesta de la API')
+    }
+    return await resp.json();
+  } catch (error) {
+    console.error("Error en la solicitud:", error)
+    throw error
+  }
+}
+
 const Barnav = ({nomina, nombre}) => { 
+
+    const [points, setPoints] = useState(0);
     // Función para cerrar sesión
     const handleLogout = () => {
         sessionStorage.clear();
         localStorage.clear();
         // Redirect to login and prevent back navigation
-        window.location.replace("/");
+        window.location.replace("/kyspoints");
     }
+
+    const getPoints = async () => {
+        const dataToSend = {
+            aksi: "GetPoints",
+            nn: nomina
+        }
+        try {
+            const response = await enviarData(url, dataToSend)
+            setPoints(response.data) // Actualiza el estado con los datos
+            // console.log(response.data)
+        } catch (error) {
+            console.error("Error al solicitar los datos:", error)
+        }
+    }
+
+    useEffect(() => {
+        getPoints();
+    }, []);
 
     return (
         <>
@@ -21,7 +63,7 @@ const Barnav = ({nomina, nombre}) => {
                         src={coin} />
                     </div>
                 </div>
-                <a className="btn btn-ghost text-[20px] ml-[-15px] text-white hover:bg-transparent">230 pts.</a>
+                <a className="btn btn-ghost text-[20px] ml-[-15px] text-white hover:bg-transparent">{points+" pts."}</a>
             </div>
             <div className="flex-none">
                 <div className="dropdown dropdown-end">

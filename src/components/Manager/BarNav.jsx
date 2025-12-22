@@ -8,7 +8,7 @@ function BarNav({nomina, nombre}) {
         sessionStorage.clear();
         localStorage.clear();
         // Redirect to login and prevent back navigation
-        window.location.replace("/");
+        window.location.replace("/kyspoints");
     }
     
   return (

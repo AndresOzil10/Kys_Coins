@@ -9,7 +9,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route index element={<Index />} />
+        <Route path="/kyspoints" index element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/personal" element={<Panel />} />
         <Route path="/questions" element={<Questions />} />

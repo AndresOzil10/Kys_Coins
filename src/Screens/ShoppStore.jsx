@@ -1,427 +1,919 @@
 import React, { useState, useRef, useEffect } from 'react'
+import TablePay from '../components/Personal/TablePay';
+import { useLocation } from 'react-router-dom';
+import {Card,CardContent,CardMedia,Typography,Button,IconButton,Badge,Chip,TextField,MenuItem,Select,
+  InputAdornment,Box,CircularProgress,Alert,Grid,Slide,Dialog,DialogContent,DialogTitle,
+  DialogActions,Tooltip,Avatar,List,ListItem,ListItemAvatar,ListItemText,Divider
+} from '@mui/material';
+import {ShoppingCart as CartIcon,Search as SearchIcon, Add as AddIcon, Remove as RemoveIcon, 
+  Delete as DeleteIcon,Close as CloseIcon,ArrowBack as ArrowBackIcon, LocalMall as StoreIcon, 
+  Star as StarIcon, Category as CategoryIcon,CurrencyExchange as PointsIcon, Verified as VerifiedIcon,
+  AddShoppingCart as AddCartIcon, ShoppingBag as BagIcon, Redeem as GiftIcon 
+} from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const url = import.meta.env.VITE_API_URL
+
+const enviarData = async (url, data) => {
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!resp.ok) {
+      throw new Error('Error en la respuesta de la API')
+    }
+    return await resp.json();
+  } catch (error) {
+    console.error("Error en la solicitud:", error)
+    throw error
+  }
+}
 
 const ShoppStore = () => {
-  const [items, setItems] = useState([
-    { id: 1, name: 'Agenda', price: 20, image: '/assets/images/agenda.jpg', description: 'Agenda.' },
-    { id: 2, name: 'Alexa Echo Dot', price: 50, image: '/assets/images/alexa.jpg', description: 'Bocina Inteligente Echo Dot 5 Wifi Bluetooth tipo esfera Negro' },
-    { id: 3, name: 'Asador', price: 120, image: '/assets/images/asador.webp', description: 'Asador de Carbón Avera Tipo Barril 70cm Acb02/Acero Inoxidable' },
-    { id: 4, name: 'Audifonos', price: 100, image: '/assets/images/audifonos.webp', description: 'Audifonos Inalálambricos JBL Harman Live Flex3' },
-    { id: 5, name: 'Teléfono', price: 110, image: '/assets/images/celular.webp', description: 'Moto G54 %G DualSim 256GB Glacier Blue 8GB RAM Liberado Motorola.' },
-    { id: 6, name: 'Alexa PRO', price: 70, image: '/assets/images/echoDot.jpeg', description: 'Asistente Alexa ECHO Dot 4° Generacion con reloj led azul.' },
-    { id: 7, name: 'Kit de herramientas', price: 90, image: '/assets/images/herramientas.jpg', description: 'Realtek Kit de Herramientas mecánicas de 100 pzs.' },
-    { id: 8, name: 'Laptop HP', price: 130, image: '/assets/images/laptop.webp', description: 'Laptop HP 15-FC0001LA AMD Ryzen3 8GB RAM 512GB SSD.' },
-    { id: 9, name: 'Mochila Camping', price: 50, image: '/assets/images/mochila.jpg', description: 'Mochila táctica militar para Camping Negro.' },
-    { id: 10, name: 'Mochila', price: 40, image: '/assets/images/mochilaLap.jpg', description: 'Mochila Lenovo B210 para Laptop de hasta 15.6´´.' },
-    { id: 11, name: 'Pantalla 55´´', price: 150, image: '/assets/images/pantalla.webp', description: 'TV Samsung 55 pulgadas 4K Ultra HD SMART TV Led.' },
-    { id: 12, name: 'Paraguas', price: 30, image: '/assets/images/paraguas.webp', description: 'Paraguas.' },
-    { id: 13, name: 'Refrigerdor.', price: 130, image: '/assets/images/refrigerador.webp', description: 'Refrigerador Semiautomático ATVI 6.6 pies con despachador Color Silver.' },
-    { id: 14, name: 'Reloj Inteligente.', price: 60, image: '/assets/images/smartwatch.webp', description: 'Reloj inteligente Smartwatch Bluetooth llamada Negro Bloosom.' },
-    { id: 15, name: 'Barra de sonido.', price: 180, image: '/assets/images/sonido.jpg', description: 'Samsung-HW-Q800a Barra de Sonido de 3.1.2 Canales con Dolby Atmos.' },
-    { id: 16, name: 'Soporte para telefono.', price: 10, image: '/assets/images/soporte.webp', description: 'Soporte de telefono retrovisor.' },
-    { id: 17, name: 'Tablet.', price: 100, image: '/assets/images/tablet.jpg', description: 'Tablet Samsung Tab A9 + 4GB RAM 64GB Silver.' },
-    { id: 18, name: 'Termo.', price: 30, image: '/assets/images/termo.webp', description: 'Termo de Acero Inoxidable Vercort Abre Facil 500ml.' },
-    { id: 19, name: 'Kit de toppers.', price: 60, image: '/assets/images/tuppers.webp', description: 'Juego de 12 contenedores Topper de vidrio con 12 tapas herméticas antiderrames Styrka.' },
-    { id: 20, name: 'Tarjeta de regalo Pluxee.', price: 50, image: '/assets/images/tarjeta_regalo.webp', description: 'Tarjeta de regalo con monto equivalente a $800 MX' },
-    { id: 21, name: 'Hospedaje para viaje.', price: 150, image: '/assets/images/Hospedaje.png', description: 'Hospedaje para viajes (Monto Maximo $8000 MXN)' },
-    { id: 22, name: 'Boletos para el estadio.', price: 60, image: '/assets/images/boletos.png', description: 'Dos Boletos para el Estadio.' },
-  ])
+  const location = useLocation()
+  const { nomina } = location.state || {}
 
-  const [cart, setCart] = useState([]) // Estado para el carrito
-  const [isCartOpen, setIsCartOpen] = useState(false) // Estado para el modal del carrito (opcional, si quieres mantener el modal)
-  const [isTooltipOpen, setIsTooltipOpen] = useState(false) // Estado para el tooltip del carrito
-  const [loadedImages, setLoadedImages] = useState(new Set()) // Estado para rastrear imágenes cargadas
-  const [searchTerm, setSearchTerm] = useState('') // Estado para el término de búsqueda
+  const [cart, setCart] = useState([])
+  const [items, setItems] = useState([])
+  const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false)
+  const [loadedImages, setLoadedImages] = useState(new Set())
+  const [searchTerm, setSearchTerm] = useState('')
   const [sortOrder, setSortOrder] = useState('')
-  const tooltipRef = useRef(null) // Ref para el tooltip
+  const [filterCategory, setFilterCategory] = useState('all')
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [selectedItem, setSelectedItem] = useState(null)
+  const tooltipRef = useRef(null)
+  const [ModalPay, setModalPay] = useState(false)
 
-  // Agregar al carrito
+  const setDataItems = async () => {
+    setLoading(true)
+    setError(null)
+    const dataToSend = {
+      aksi: "GetImagesStore",
+    }
+    try {
+      const data = await enviarData(url, dataToSend);
+      const itemsData = data.data || []
+      setItems(itemsData)
+      
+      // Extraer categorías únicas
+      const uniqueCategories = [...new Set(itemsData.map(item => item.categoria || 'General'))]
+      setCategories(['all', ...uniqueCategories])
+    } catch (error) {
+      console.error('Error fetching items:', error)
+      setError('Error al cargar los productos')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Agregar al carrito con cantidad
   const addToCart = (item) => {
-    setCart([...cart, item]);
+    setCart(prevCart => {
+      const existingItem = prevCart.find(cartItem => cartItem.id === item.id)
+      if (existingItem) {
+        return prevCart.map(cartItem =>
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        )
+      } else {
+        return [...prevCart, { ...item, quantity: 1 }]
+      }
+    })
   }
 
   // Eliminar del carrito
   const removeFromCart = (itemId) => {
-    setCart(cart.filter(item => item.id !== itemId));
+    setCart(cart.filter(item => item.id !== itemId))
+  }
+
+  // Actualizar cantidad en carrito
+  const updateQuantity = (itemId, newQuantity) => {
+    if (newQuantity < 1) {
+      removeFromCart(itemId)
+      return
+    }
+    setCart(cart.map(item =>
+      item.id === itemId ? { ...item, quantity: newQuantity } : item
+    ))
   }
 
   // Calcular total
-  const total = cart.reduce((sum, item) => sum + item.price, 0)
+  const total = cart.reduce((sum, item) => sum + (item.puntos * item.quantity), 0)
+  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   const toggleCart = () => {
-    setIsCartOpen(!isCartOpen);
+    setIsCartOpen(!isCartOpen)
   }
 
-  // Función para manejar carga de imagen
+  const toggleModalPay = () => {
+    setIsCartOpen(false)
+    setModalPay(!ModalPay)
+  }
+
   const handleImageLoad = (itemId) => {
-    setLoadedImages(prev => new Set([...prev, itemId]));
+    setLoadedImages(prev => new Set([...prev, itemId]))
   }
 
-  // Función para manejar error de imagen (tratar como cargada para evitar bloqueo)
   const handleImageError = (itemId) => {
-    setLoadedImages(prev => new Set([...prev, itemId]));
+    setLoadedImages(prev => new Set([...prev, itemId]))
   }
 
-  // Función para abrir el tooltip
   const openTooltip = () => {
-    setIsTooltipOpen(true);
+    setIsTooltipOpen(true)
   }
 
-  // Función para cerrar el tooltip
   const closeTooltip = () => {
-    setIsTooltipOpen(false);
+    setIsTooltipOpen(false)
   }
 
-  // useEffect para detectar clics fuera del tooltip
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
-        closeTooltip();
+        closeTooltip()
       }
-    };
+    }
 
     if (isTooltipOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isTooltipOpen]);
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isTooltipOpen])
 
-  // Filtrar items basados en el término de búsqueda
+  useEffect(() => {
+    setDataItems()
+  }, [])
+
+  // Filtrar y ordenar items
   const filteredAndSortedItems = items
-    .filter(item =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter(item => {
+      const matchesSearch = searchTerm === '' || 
+        item.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.descripcion?.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      const matchesCategory = filterCategory === 'all' || 
+        item.categoria === filterCategory || 
+        (filterCategory === 'General' && !item.categoria)
+      
+      return matchesSearch && matchesCategory
+    })
     .sort((a, b) => {
       if (sortOrder === 'asc') {
-        return a.price - b.price;
+        return a.puntos - b.puntos
       } else if (sortOrder === 'desc') {
-        return b.price - a.price;
+        return b.puntos - a.puntos
+      } else if (sortOrder === 'popular') {
+        return (b.popularidad || 0) - (a.popularidad || 0)
       }
-      return 0; // Sin orden
-    });
+      return 0
+    })
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      'Electrónica': '#3B82F6',
+      'Hogar': '#10B981',
+      'Oficina': '#8B5CF6',
+      'General': '#6B7280',
+      'Tecnología': '#EF4444',
+      'Deportes': '#F59E0B'
+    }
+    return colors[category] || '#6B7280'
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 relative mb-12">
+    <Box sx={{ 
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f0f9ff 0%, #fdf2f8 100%)',
+      p: { xs: 2, md: 4 }
+    }}>
       {/* Header Mejorado */}
-      <header className="text-center mb-8 bg-gradient-to-r from-gray-700 to-gray-400 text-white py-8 rounded-2xl shadow-lg">
-        <div className="flex items-center justify-center mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-          </svg>
-          <h1 className="text-4xl font-bold">Tienda Kayser Points</h1>
-        </div>
-        <p className="text-lg opacity-90">Elige y compra artículos con tus puntos</p>
-        <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-4">
-          {/* Buscador */}
-          <div className="relative w-full sm:max-w-md">
-            <input
-              type="text"
-              placeholder="Buscar artículos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input input-bordered w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl shadow-md focus:ring-2 focus:ring-white focus:border-white transition duration-200 text-gray-800"
-            />
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card sx={{
+          background: 'linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%)',
+          borderRadius: 4,
+          mb: 4,
+          overflow: 'hidden',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)'
+        }}>
+          <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+            <Box sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              color: 'white'
+            }}>
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                mb: 2
+              }}>
+                <StoreIcon sx={{ fontSize: 48, mr: 2, color: '#fbbf24' }} />
+                <Typography variant="h3" sx={{
+                  fontWeight: 'bold',
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  Tienda Kayser Points
+                </Typography>
+              </Box>
+              
+              <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
+                Transforma tus puntos en experiencias inolvidables
+              </Typography>
 
-          {/* Filtro de Orden */}
-          <div className="relative w-full sm:max-w-xs">
-            <select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-              className="select select-bordered w-full h-12 pl-4 pr-10 py-3 bg-white border border-gray-300 rounded-xl shadow-md focus:ring-2 focus:ring-white focus:border-white transition duration-200 text-gray-800 appearance-none"
+              {/* Buscador y Filtros */}
+              <Grid container spacing={2} sx={{ maxWidth: 800, mx: 'auto' }}>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    placeholder="Buscar productos..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon sx={{ color: 'white' }} />
+                        </InputAdornment>
+                      ),
+                      sx: {
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        borderRadius: 2,
+                        color: 'white',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255, 255, 255, 0.3)'
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255, 255, 255, 0.5)'
+                        }
+                      }
+                    }}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} md={3}>
+                  <Select
+                    fullWidth
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value)}
+                    displayEmpty
+                    sx={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: 2,
+                      color: 'white',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(255, 255, 255, 0.3)'
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(255, 255, 255, 0.5)'
+                      },
+                      '& .MuiSelect-icon': {
+                        color: 'white'
+                      }
+                    }}
+                  >
+                    <MenuItem value="">Sin orden</MenuItem>
+                    <MenuItem value="asc">Menor precio</MenuItem>
+                    <MenuItem value="desc">Mayor precio</MenuItem>
+                    <MenuItem value="popular">Más populares</MenuItem>
+                  </Select>
+                </Grid>
+                
+                <Grid item xs={12} md={3}>
+                  <Select
+                    fullWidth
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    sx={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: 2,
+                      color: 'white',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(255, 255, 255, 0.3)'
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(255, 255, 255, 0.5)'
+                      },
+                      '& .MuiSelect-icon': {
+                        color: 'white'
+                      }
+                    }}
+                  >
+                    <MenuItem value="all">Todas las categorías</MenuItem>
+                    {categories.filter(c => c !== 'all').map(category => (
+                      <MenuItem key={category} value={category}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <CategoryIcon sx={{ fontSize: 16, color: getCategoryColor(category) }} />
+                          {category}
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </Grid>
+              </Grid>
+            </Box>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Stats Cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <Grid container spacing={2} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{
+              background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+              borderRadius: 3,
+              color: 'white'
+            }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Productos
+                </Typography>
+                <Typography variant="h3">
+                  {items.length}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{
+              background: 'linear-gradient(135deg, #34d399 0%, #10b981 100%)',
+              borderRadius: 3,
+              color: 'white'
+            }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  En tu carrito
+                </Typography>
+                <Typography variant="h3">
+                  {itemCount}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{
+              background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+              borderRadius: 3,
+              color: 'white'
+            }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Puntos totales
+                </Typography>
+                <Typography variant="h3">
+                  {total}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <Card sx={{
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+              borderRadius: 3,
+              color: 'white'
+            }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Categorías
+                </Typography>
+                <Typography variant="h3">
+                  {categories.length - 1}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </motion.div>
+
+      {/* Productos */}
+      <Box sx={{ mb: 8 }}>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}>
+            <CircularProgress size={60} sx={{ color: '#3b82f6' }} />
+          </Box>
+        ) : error ? (
+          <Alert severity="error" sx={{ borderRadius: 3, mb: 3 }}>
+            {error}
+          </Alert>
+        ) : (
+          <AnimatePresence>
+            <Grid container spacing={3}>
+              {filteredAndSortedItems.map((item, index) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    whileHover={{ y: -5 }}
+                  >
+                    <Card sx={{
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+                        transform: 'translateY(-8px)'
+                      }
+                    }}>
+                      {/* Imagen del producto */}
+                      <Box sx={{ position: 'relative', height: 200 }}>
+                        <CardMedia
+                          component="img"
+                          image={`kyspoints/assets/images/${item.image}`}
+                          alt={item.nombre}
+                          sx={{
+                            height: '100%',
+                            objectFit: 'cover',
+                            transition: 'transform 0.5s ease',
+                            '&:hover': {
+                              transform: 'scale(1.05)'
+                            }
+                          }}
+                        />
+                        
+                        {/* Badge de categoría */}
+                        <Chip
+                          label={item.categoria || 'General'}
+                          size="small"
+                          sx={{
+                            position: 'absolute',
+                            top: 12,
+                            left: 12,
+                            background: getCategoryColor(item.categoria || 'General'),
+                            color: 'white',
+                            fontWeight: 'bold'
+                          }}
+                        />
+                        
+                        {/* Overlay de acción */}
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(0, 0, 0, 0.5)',
+                            opacity: 0,
+                            transition: 'opacity 0.3s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            '&:hover': {
+                              opacity: 1
+                            }
+                          }}
+                        >
+                          <Button
+                            variant="contained"
+                            startIcon={<AddCartIcon />}
+                            onClick={() => addToCart(item)}
+                            sx={{
+                              background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
+                            }}
+                          >
+                            Agregar
+                          </Button>
+                        </Box>
+                      </Box>
+
+                      <CardContent sx={{ flexGrow: 1 }}>
+                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                          {item.nombre}
+                        </Typography>
+                        
+                        <Typography variant="body2" color="text.secondary" paragraph sx={{ mb: 2 }}>
+                          {item.descripcion}
+                        </Typography>
+                        
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 'auto' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <PointsIcon sx={{ color: '#f59e0b' }} />
+                            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#f59e0b' }}>
+                              {item.puntos}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              pts
+                            </Typography>
+                          </Box>
+                          
+                          <Chip
+                            icon={<StarIcon sx={{ fontSize: 16 }} />}
+                            label={item.popularidad || 'Nuevo'}
+                            size="small"
+                            color="warning"
+                          />
+                        </Box>
+                      </CardContent>
+                      
+                      <Box sx={{ p: 2, pt: 0 }}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          startIcon={<AddCartIcon />}
+                          onClick={() => addToCart(item)}
+                          sx={{
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            '&:hover': {
+                              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                            }
+                          }}
+                        >
+                          Agregar al carrito
+                        </Button>
+                      </Box>
+                    </Card>
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
+          </AnimatePresence>
+        )}
+        
+        {filteredAndSortedItems.length === 0 && !loading && (
+          <Card sx={{ textAlign: 'center', p: 6, borderRadius: 3 }}>
+            <BagIcon sx={{ fontSize: 80, color: '#9ca3af', mb: 2 }} />
+            <Typography variant="h6" gutterBottom>
+              No se encontraron productos
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Prueba con otros términos de búsqueda o categorías
+            </Typography>
+          </Card>
+        )}
+      </Box>
+
+      {/* Botón del carrito flotante */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+        style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000 }}
+      >
+        <Tooltip title="Ver carrito" arrow>
+          <IconButton
+            onMouseEnter={openTooltip}
+            onClick={toggleCart}
+            sx={{
+              width: 64,
+              height: 64,
+              background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+              color: 'white',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+                transform: 'scale(1.1)'
+              },
+              transition: 'all 0.3s ease',
+              boxShadow: '0 10px 30px rgba(37, 99, 235, 0.3)'
+            }}
+          >
+            <Badge badgeContent={itemCount} color="error" max={99}>
+              <CartIcon sx={{ fontSize: 28 }} />
+            </Badge>
+          </IconButton>
+        </Tooltip>
+      </motion.div>
+
+      {/* Tooltip del carrito */}
+      {isTooltipOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          ref={tooltipRef}
+          style={{
+            position: 'fixed',
+            bottom: 100,
+            right: 24,
+            zIndex: 999
+          }}
+        >
+          <Card sx={{
+            width: 320,
+            maxHeight: 400,
+            overflow: 'auto',
+            borderRadius: 3,
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25)'
+          }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CartIcon />
+                  Carrito
+                </Typography>
+                <IconButton size="small" onClick={closeTooltip}>
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+              
+              {cart.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <CartIcon sx={{ fontSize: 60, color: '#9ca3af', mb: 2 }} />
+                  <Typography color="text.secondary">
+                    Tu carrito está vacío
+                  </Typography>
+                </Box>
+              ) : (
+                <>
+                  <List sx={{ maxHeight: 250, overflow: 'auto' }}>
+                    {cart.map((item) => (
+                      <React.Fragment key={item.id}>
+                        <ListItem
+                          secondaryAction={
+                            <IconButton edge="end" onClick={() => removeFromCart(item.id)}>
+                              <DeleteIcon />
+                            </IconButton>
+                          }
+                        >
+                          <ListItemAvatar>
+                            <Avatar
+                              src={`kyspoints/assets/images/${item.image}`}
+                              alt={item.nombre}
+                              variant="rounded"
+                            />
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={
+                              <Box component="div" sx={{ fontWeight: 'medium' }}>
+                                {item.nombre}
+                              </Box>
+                            }
+                            secondary={
+                              <Box component="div" sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 0.5 }}>
+                                <Box component="span" sx={{ 
+                                  color: 'primary.main', 
+                                  fontSize: '0.875rem', 
+                                  fontWeight: 500 
+                                }}>
+                                  {item.puntos} pts × {item.quantity}
+                                </Box>
+                                <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <IconButton 
+                                    size="small" 
+                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                    sx={{ p: 0.5 }}
+                                  >
+                                    <RemoveIcon fontSize="small" />
+                                  </IconButton>
+                                  <Box component="span" sx={{ 
+                                    fontSize: '0.875rem',
+                                    minWidth: '20px',
+                                    textAlign: 'center'
+                                  }}>
+                                    {item.quantity}
+                                  </Box>
+                                  <IconButton 
+                                    size="small" 
+                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                    sx={{ p: 0.5 }}
+                                  >
+                                    <AddIcon fontSize="small" />
+                                  </IconButton>
+                                </Box>
+                              </Box>
+                            }
+                          />
+                        </ListItem>
+                        <Divider variant="inset" component="li" />
+                      </React.Fragment>
+                    ))}
+                  </List>
+                  
+                  <Box sx={{ mt: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Typography variant="h6">Total:</Typography>
+                      <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold' }}>
+                        {total} pts
+                      </Typography>
+                    </Box>
+                    
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={<VerifiedIcon />}
+                      onClick={toggleModalPay}
+                      sx={{
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                        }
+                      }}
+                    >
+                      Proceder al pago
+                    </Button>
+                  </Box>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Modal del carrito */}
+      <Dialog
+        open={isCartOpen}
+        onClose={toggleCart}
+        maxWidth="md"
+        fullWidth
+        TransitionComponent={Slide}
+        TransitionProps={{ direction: 'up' }}
+      >
+        <DialogTitle sx={{
+          background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <CartIcon />
+            <Typography variant="h6">Carrito de compras</Typography>
+            <Chip label={itemCount} size="small" color="error" />
+          </Box>
+          <IconButton onClick={toggleCart} sx={{ color: 'white' }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        
+        <DialogContent sx={{ p: 0 }}>
+          {cart.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <CartIcon sx={{ fontSize: 80, color: '#9ca3af', mb: 3 }} />
+              <Typography variant="h6" gutterBottom>
+                Tu carrito está vacío
+              </Typography>
+              <Typography color="text.secondary" paragraph>
+                Agrega productos para comenzar
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<ArrowBackIcon />}
+                onClick={toggleCart}
+              >
+                Continuar comprando
+              </Button>
+            </Box>
+          ) : (
+            <Box sx={{ p: 3 }}>
+              <List>
+                {cart.map((item) => (
+                  <Card key={item.id} sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={2}>
+                          <Avatar
+                            src={`kyspoints/assets/images/${item.image}`}
+                            alt={item.nombre}
+                            sx={{ width: 60, height: 60 }}
+                            variant="rounded"
+                          />
+                        </Grid>
+                        
+                        <Grid item xs={6}>
+                          <Typography variant="subtitle1" fontWeight="bold">
+                            {item.nombre}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {item.descripcion}
+                          </Typography>
+                          <Typography variant="body1" color="primary" fontWeight="bold">
+                            {item.puntos} pts cada uno
+                          </Typography>
+                        </Grid>
+                        
+                        <Grid item xs={2}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <IconButton size="small" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                              <RemoveIcon />
+                            </IconButton>
+                            <Typography>{item.quantity}</Typography>
+                            <IconButton size="small" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                              <AddIcon />
+                            </IconButton>
+                          </Box>
+                        </Grid>
+                        
+                        <Grid item xs={2}>
+                          <Box sx={{ textAlign: 'right' }}>
+                            <Typography variant="h6" color="primary" fontWeight="bold">
+                              {item.puntos * item.quantity} pts
+                            </Typography>
+                            <IconButton size="small" onClick={() => removeFromCart(item.id)} color="error">
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                ))}
+              </List>
+              
+              <Card sx={{ mt: 3, background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)' }}>
+                <CardContent>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Typography variant="h6">Total del carrito</Typography>
+                    </Grid>
+                    <Grid item xs={6} sx={{ textAlign: 'right' }}>
+                      <Typography variant="h4" color="primary" fontWeight="bold">
+                        {total} pts
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Box>
+          )}
+        </DialogContent>
+        
+        {cart.length > 0 && (
+          <DialogActions sx={{ p: 3, gap: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={toggleCart}
+              startIcon={<ArrowBackIcon />}
             >
-              <option value="">Sin orden</option>
-              <option value="asc">Precio: Menor a Mayor</option>
-              <option value="desc">Precio: Mayor a Menor</option>
-            </select>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
-      </header>
+              Seguir comprando
+            </Button>
+            <Button
+              variant="contained"
+              onClick={toggleModalPay}
+              startIcon={<VerifiedIcon />}
+              sx={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                }
+              }}
+            >
+              Proceder al pago ({total} pts)
+            </Button>
+          </DialogActions>
+        )}
+      </Dialog>
 
-      {/* Pre-cargar imágenes ocultas para rastrear carga */}
-      <div style={{ display: 'none' }}>
-        {items.map((item) => (
-          <img
-            key={item.id}
-            src={item.image}
-            alt={item.name}
-            onLoad={() => handleImageLoad(item.id)}
-            onError={() => handleImageError(item.id)}
-          />
-        ))}
-      </div>
-
-      {/* Mostrar loading si no todas las imágenes están cargadas */}
-      {loadedImages.size === items.length ? (
-        <main className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-          {filteredAndSortedItems.map((item) => (
-            <div key={item.id} className="card bg-white shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-200 rounded-2xl overflow-hidden animate-fade-in">
-              <figure className="relative">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="object-cover transition-transform duration-300 hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-opacity-0 hover:bg-opacity-20 transition duration-300 flex items-center justify-center">
-                  <button 
-                    className="btn btn-primary btn-circle opacity-0 hover:opacity-100 transition-opacity duration-300"
-                    onClick={() => addToCart(item)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                </div>
-              </figure>
-              <div className="card-body p-5">
-                <h2 className="card-title text-xl font-bold text-gray-800 mb-2">{item.name}</h2>
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
-                <div className="flex items-center justify-between">
-                  <p className="text-lg font-bold text-blue-600 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                    {item.price} pts.
-                  </p>
-                  <button 
-                    className="btn btn-primary bg-gradient-to-r from-gray-700 to-black hover:to-red-600 text-white shadow-md transition duration-200"
-                    onClick={() => addToCart(item)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    Agregar
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </main>
-      ) : (
-        <div className="flex justify-center items-center min-h-[50vh]">
-          <div className="text-center">
-            <span className="loading loading-spinner loading-lg text-blue-500"></span>
-            <p className="mt-4 text-gray-600">Cargando productos...</p>
-          </div>
-        </div>
+      {/* Modal de pago */}
+      {ModalPay && (
+        <TablePay toggleModalPay={toggleModalPay} nomina={nomina} total={total} />
       )}
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-6 mt-12 rounded-t-2xl">
-        <div className="text-center">
-          <p className="text-sm">&copy; 2023 Kayser Points. Todos los derechos reservados.</p>
-          <p className="text-xs mt-2 opacity-75">Compra inteligente, vive mejor.</p>
-        </div>
-      </footer>
-
-      {/* Contenedor para el botón y tooltip */}
-      <div className="fixed bottom-4 right-4 z-50">
-        <button
-          className="btn btn-primary btn-circle shadow-lg hover:shadow-xl transition duration-200"
-          onMouseEnter={openTooltip} // Abre el tooltip al pasar el cursor
-          onClick={toggleCart}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          {cart.length > 0 && <span className="badge badge-secondary badge-xs absolute top-[-10px] right-[-5px] animate-pulse">{cart.length}</span>}
-        </button>
-
-        {/* Tooltip del carrito */}
-        {isTooltipOpen && cart.length > 0 && (
-          <div ref={tooltipRef} className="absolute bottom-16 right-0 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-2xl p-6 w-80 max-h-64 overflow-y-auto">
-            {/* Header del Tooltip */}
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-lg text-gray-800 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Carrito de Compras
-              </h3>
-              <button
-                onClick={closeTooltip}
-                className="btn btn-circle btn-ghost btn-sm text-gray-500 hover:text-gray-700 transition duration-200"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Lista de Items */}
-            <ul className="space-y-3 mb-4">
-              {cart.map((item) => (
-                <li key={item.id} className="flex items-center space-x-3 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200">
-                  <img src={item.image} alt={item.name} className="w-10 h-10 object-cover rounded-md border border-gray-300" />
-                  <div className="flex-1">
-                    <span className="text-sm font-medium text-gray-800">{item.name}</span>
-                    <p className="text-xs text-gray-600">{item.price} pts.</p>
-                  </div>
-                  <button 
-                    className="btn btn-error btn-xs btn-circle hover:bg-red-600 transition duration-200"
-                    onClick={() => removeFromCart(item.id)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="bi bi-trash3-fill" viewBox="0 0 16 16">
-                      <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/>
-                    </svg>
-                  </button>
-                </li>
-              ))}
-            </ul>
-
-            {/* Total */}
-            <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200 mb-4">
-              <span className="font-semibold text-gray-800">Total:</span>
-              <span className="font-bold text-lg text-blue-600">{total} pts.</span>
-            </div>
-
-            {/* Botones */}
-            <div className="flex space-x-2">
-              <button 
-                className="btn btn-success btn-sm flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md transition duration-200"
-                onClick={() => alert('Procesando compra...')} // Simulación
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Comprar
-              </button>
-              <button 
-                className="btn btn-ghost btn-sm flex-1 hover:bg-gray-100 transition duration-200"
-                onClick={closeTooltip} // Cierra el tooltip
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        )}
-        
-        {isTooltipOpen && cart.length === 0 && (
-          <div ref={tooltipRef} className="absolute bottom-16 right-0 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-2xl p-6 w-64">
-            {/* Header del Tooltip */}
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-lg text-gray-800 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Carrito Vacío
-              </h3>
-              <button
-                onClick={closeTooltip}
-                className="btn btn-circle btn-ghost btn-sm text-gray-500 hover:text-gray-700 transition duration-200"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Contenido */}
-            <div className="text-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <p className="text-sm text-gray-600 font-medium">Tu carrito está vacío.</p>
-              <p className="text-xs text-gray-500 mt-1">¡Agrega algunos productos para comenzar!</p>
-            </div>
-
-            {/* Botón */}
-            <button 
-              className="btn btn-primary btn-sm w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md transition duration-200"
-              onClick={closeTooltip} // Cierra el tooltip
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Continuar Comprando
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Modal para carrito (opcional, si quieres mantenerlo para clic) */}
-      {isCartOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto border border-gray-200">
-            {/* Header del Modal */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Carrito de Compras
-              </h2>
-              <button
-                onClick={toggleCart}
-                className="btn btn-circle btn-ghost btn-sm text-gray-500 hover:text-gray-700 transition duration-200"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Cuerpo del Modal */}
-            <div className="p-6">
-              {/* Lista de Items */}
-              <ul className="space-y-4 mb-6">
-                {cart.map((item) => (
-                  <li key={item.id} className="flex items-center space-x-4 p-4 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200">
-                    <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded-md border border-gray-300" />
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-gray-800">{item.name}</span>
-                      <p className="text-xs text-gray-600">{item.price} pts.</p>
-                    </div>
-                    <button 
-                      className="btn btn-error btn-xs btn-circle hover:bg-red-600 transition duration-200"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className="bi bi-trash3-fill" viewBox="0 0 16 16">
-                        <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/>
-                      </svg>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-
-              {/* Total */}
-              <div className="flex justify-between items-center p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6">
-                <span className="font-semibold text-gray-800">Total:</span>
-                <span className="font-bold text-xl text-blue-600">{total} pts.</span>
-              </div>
-
-              {/* Botones */}
-              <div className="flex space-x-3">
-                <button 
-                  className="btn btn-success flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg transition duration-200"
-                  onClick={() => alert('Procesando compra...')} // Simulación
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Comprar Ahora
-                </button>
-                <button 
-                  className="btn btn-outline btn-ghost flex-1 hover:bg-gray-100 transition duration-200"
-                  onClick={toggleCart} // Cierra el modal
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.8 }}
+      >
+        <Card sx={{
+          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+          borderRadius: 3,
+          mt: 4,
+          color: 'white'
+        }}>
+          <CardContent sx={{ textAlign: 'center', py: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+              <GiftIcon sx={{ mr: 1, color: '#fbbf24' }} />
+              <Typography variant="h6">
+                Kayser Points Store
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
+              © {new Date().getFullYear()} Kayser Points. Todos los derechos reservados.
+            </Typography>
+            <Typography variant="caption" sx={{ opacity: 0.6 }}>
+              Transforma tu esfuerzo en recompensas
+            </Typography>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </Box>
   )
 }
 

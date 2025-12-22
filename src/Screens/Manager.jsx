@@ -8,22 +8,23 @@ import CustomAlert from '../components/CustomAlert';
 const API_URL = import.meta.env.VITE_API_URL; // Renombré para claridad
 
 const enviarData = async (apiUrl, data) => {
-  try {
-    const resp = await fetch(apiUrl, {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    if (!resp.ok) {
-      throw new Error(`Error en la respuesta de la API: ${resp.status}`)
+    try {
+        const resp = await fetch(apiUrl, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        })
+        // console.log("Respuesta cruda de fetch:", resp); // Debug: verifica respuesta cruda
+        if (!resp.ok) {
+        throw new Error(`Error en la respuesta de la API: ${resp.estado}`)
+        }
+        return await resp.json();
+    } catch (error) {
+        console.error("Error en la solicitud:", error)
+        throw error
     }
-    return await resp.json();
-  } catch (error) {
-    console.error("Error en la solicitud:", error)
-    throw error
-  }
 }
 
 const Manager = () => { 
@@ -42,7 +43,7 @@ const Manager = () => {
         setError("") // Limpia errores previos
 
         const loginData = { aksi: "loginManager", username: username, password: password }
-        console.log("Enviando datos:", loginData) // Debug: verifica que se ejecute
+        // console.log("Enviando datos:", loginData) // Debug: verifica que se ejecute
 
         try {
             // console.log("Entrando al try..."); // Debug: confirma entrada al try
@@ -57,7 +58,7 @@ const Manager = () => {
                         nomina: response.nomina 
                     } 
                 })
-            } else {
+            } else if(response.estado === "error") {
                 setCustomAlertVisible(true)
                 setCustomAlertMessage(response.mensaje)
                 setTimeout(() => {
