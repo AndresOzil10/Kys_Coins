@@ -5,6 +5,7 @@ import HomeManager from './HomeManager'
 import MenuManager from '../components/Manager/MenuManager'
 import Allproposals from './Allproposals'
 import UpdateImages from './UpdateImages'
+import StatusReward from './StatusReward'
 
 function ManagerPanel() {
     const location = useLocation()
@@ -14,24 +15,27 @@ function ManagerPanel() {
     const renderScreen = () => {
         switch (currentScreen) {
             case 'Home':
-                return <HomeManager />
+                return <HomeManager nombre={nombre}/>
             case 'All':
                 return <Allproposals />
+            case 'Orders':
+                return <StatusReward />
             case 'Images':
                 return <UpdateImages />
             default:
                 return 
         }
     }
-  return (
-    <>  
-        <div>
-            <BarNav nomina={nomina} nombre={nombre}/>
-            <MenuManager currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}/>
-            {renderScreen()}
-        </div>
-    </>
-  )
+    
+    return (
+        <>  
+            <div className="min-h-screen bg-gray-50">
+                <BarNav nomina={nomina} nombre={nombre}/>
+                <MenuManager currentScreen={currentScreen} setCurrentScreen={setCurrentScreen}/>
+                    {renderScreen()}
+            </div>
+        </>
+    )
 }
 
 export default ManagerPanel

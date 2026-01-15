@@ -3,12 +3,13 @@ import HomeIcon from '@mui/icons-material/Home'
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate'
 import StorageIcon from '@mui/icons-material/Storage'
 import { BottomNavigation, BottomNavigationAction } from '@mui/material'
+import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 
 function MenuManager({ currentScreen, setCurrentScreen }) {
 
     const handleNavigationChange = (event, newValue) => {
     // Validación básica: Solo permite valores esperados
-        if (newValue !== 'Home' && newValue !== 'Images' && newValue !== 'All') {
+        if (newValue !== 'Home' && newValue !== 'Images' && newValue !== 'All' && newValue !== 'Orders') {
         console.warn(`Valor de navegación inválido: ${newValue}. Ignorando cambio.`)
         return
         }
@@ -41,6 +42,15 @@ function MenuManager({ currentScreen, setCurrentScreen }) {
           label="All"
           value="All"
           icon={<StorageIcon />} // Icono blanco
+          aria-label="Navegar a sección Points"
+        />
+
+        {/* Pestaña Points */}
+        <BottomNavigationAction
+          key="Orders"
+          label="Orders"
+          value="Orders"
+          icon={<ContentPasteIcon />} // Icono blanco
           aria-label="Navegar a sección Points"
         />
 

@@ -65,7 +65,7 @@ const formatFecha = (fechaString) => {
 // Componente de estado con colores personalizados
 const StatusBadge = ({ status }) => {
   const getStatusConfig = (status) => {
-    const statusLower = status?.toLowerCase() || ''
+    const statusLower = String(status || '').toLowerCase()
     switch (statusLower) {
       case 'liberada':
         return {
@@ -134,6 +134,7 @@ function Allproposals() {
       
       setRows(filteredData)
       setFilteredRows(filteredData)
+      setCurrentPage(1) // Resetear a primera página al cargar nuevos datos
     } catch (error) {
       console.error("Error al solicitar los datos:", error)
       Swal.fire({
@@ -159,32 +160,40 @@ function Allproposals() {
     RequestData()
   }, [])
 
-  // Usar useMemo para optimizar el filtrado
-  const paginatedRows = useMemo(() => {
-    const filtered = searchTerm
-      ? rows.filter(row => {
-          const searchLower = searchTerm.toLowerCase()
-          return (
-            row.titulo?.toLowerCase().includes(searchLower) ||
-            row.estatus?.toLowerCase().includes(searchLower) ||
-            row.nombre?.toLowerCase().includes(searchLower) ||
-            row.nn?.toLowerCase().includes(searchLower) ||
-            row.areaImp?.toLowerCase().includes(searchLower) ||
-            row.descripcionProp?.toLowerCase().includes(searchLower)
-          )
-        })
-      : rows
-    
-    setFilteredRows(filtered)
-    if (currentPage > Math.ceil(filtered.length / itemsPerPage)) {
+  // Función auxiliar para convertir cualquier valor a string seguro para búsqueda
+  const safeStringSearch = (value, searchLower) => {
+    if (value == null) return false
+    return String(value).toLowerCase().includes(searchLower)
+  }
+
+  // Efecto separado para manejar el filtrado
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredRows(rows)
+      setCurrentPage(1)
+    } else {
+      const searchLower = searchTerm.toLowerCase()
+      const filtered = rows.filter(row => {
+        return (
+          safeStringSearch(row.titulo, searchLower) ||
+          safeStringSearch(row.estatus, searchLower) ||
+          safeStringSearch(row.nombre, searchLower) ||
+          safeStringSearch(row.nn, searchLower) ||
+          safeStringSearch(row.areaImp, searchLower) ||
+          safeStringSearch(row.descripcionProp, searchLower)
+        )
+      })
+      setFilteredRows(filtered)
       setCurrentPage(1)
     }
-    
-    return filtered.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    )
-  }, [rows, searchTerm, currentPage, itemsPerPage])
+  }, [searchTerm, rows])
+
+  // Calcular filas paginadas de manera sincrónica
+  const paginatedRows = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = currentPage * itemsPerPage
+    return filteredRows.slice(startIndex, endIndex)
+  }, [filteredRows, currentPage, itemsPerPage])
 
   const totalPages = Math.ceil(filteredRows.length / itemsPerPage)
 
@@ -241,7 +250,7 @@ function Allproposals() {
             </Typography>
           </TableCell>
           <TableCell>
-            <Tooltip title={row.nn && row.nombre ? `${row.nn} ${row.nombre}` : 'Autor no disponible'}>
+            <Tooltip title={`${row.nn || ''} ${row.nombre || ''}`.trim() || 'Autor no disponible'}>
               <Typography 
                 variant="body2" 
                 sx={{ 
@@ -252,7 +261,7 @@ function Allproposals() {
                   maxWidth: '150px'
                 }}
               >
-                {row.nn && row.nombre ? `${row.nn} ${row.nombre}` : 'N/A'}
+                {`${row.nn || ''} ${row.nombre || ''}`.trim() || 'N/A'}
               </Typography>
             </Tooltip>
           </TableCell>
@@ -495,7 +504,7 @@ function Allproposals() {
         ) : (
           <>
             {/* Resumen rápido */}
-            <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <Box sx={{ mb:2, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
               <Paper 
                 elevation={0}
                 sx={{ 
@@ -557,7 +566,7 @@ function Allproposals() {
                 overflow: 'hidden',
                 boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
                 border: '1px solid #e5e7eb',
-                mb: 4
+                mb: 10
               }}
             >
               <TableContainer>

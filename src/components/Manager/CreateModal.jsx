@@ -1,35 +1,7 @@
-import React from 'react'
-import { 
-  Visibility, 
-  CheckCircle, 
-  Cancel, 
-  Schedule,
-  Person,
-  Groups,
-  Event,
-  Comment,
-  Save,
-  Close
-} from '@mui/icons-material'
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  TextField,
-  Checkbox,
-  Button,
-  Grid,
-  Chip,
-  CircularProgress,
-  Divider,
-  Paper,
-  Alert,
-  Stack,
-  IconButton,
-  Fade,
-  Grow
-} from '@mui/material'
+import { Visibility, CheckCircle, Cancel, Schedule,Person,Groups,Event,Comment,Save,Close} from '@mui/icons-material'
+import { Box, Typography, Card, CardContent, TextField, Checkbox, Button, Grid, Chip, CircularProgress, 
+         Divider, Paper, Alert, Stack, IconButton, Fade, Grow, FormControl, InputLabel, Select, MenuItem, 
+         FormHelperText } from '@mui/material'
 import { styled } from '@mui/material/styles'
 
 // Componentes estilizados
@@ -68,37 +40,44 @@ const SectionHeader = styled(Box)(({ theme }) => ({
   borderBottom: `2px solid ${theme.palette.divider}`
 }))
 
-function CreatedModal({ 
-    selectedId, 
-    selectedItem, 
-    acceptChecked, 
-    setAcceptChecked, 
-    rejectChecked, 
-    setRejectChecked, 
-    periodoDesarrollo, 
-    setPeriodoDesarrollo, 
-    liderManager, 
-    setLiderManager, 
-    equipoAsignado, 
-    setEquipoAsignado, 
-    primeraJunta, 
-    setPrimeraJunta, 
-    comentarios, 
-    setComentarios, 
-    handleSave, 
-    closeModal, 
-    loading, 
-    actionLoading 
-}) {
-    const handleAcceptChange = (e) => {
-        setAcceptChecked(e.target.checked)
-        if (e.target.checked) setRejectChecked(false)
-    }
+function CreatedModal({ selectedId, selectedItem, acceptChecked, setAcceptChecked, rejectChecked, 
+    setRejectChecked, periodoDesarrollo, setPeriodoDesarrollo, liderManager, setLiderManager, 
+    equipoAsignado, setEquipoAsignado, primeraJunta, setPrimeraJunta, comentarios, setComentarios, 
+    handleSave, closeModal, actionLoading }) {
+    
+const handleAcceptChange = (e) => {
+    setAcceptChecked(e.target.checked)
+    if (e.target.checked) setRejectChecked(false)
+}
 
-    const handleRejectChange = (e) => {
-        setRejectChecked(e.target.checked)
-        if (e.target.checked) setAcceptChecked(false)
-    }
+const handleRejectChange = (e) => {
+    setRejectChecked(e.target.checked)
+    if (e.target.checked) setAcceptChecked(false)
+}
+
+    // Funciones para manejar fechas sin date-fns
+const obtenerFechaMinima = () => {
+    const hoy = new Date();
+    return hoy.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+}
+
+const obtenerFechaMaxima = () => {
+    const hoy = new Date();
+    const unAnioDespues = new Date(hoy);
+    unAnioDespues.setFullYear(hoy.getFullYear() + 1);
+    return unAnioDespues.toISOString().split('T')[0];
+}
+
+// Función para formatear fecha para display (opcional)
+const formatearFechaParaDisplay = (fechaString) => {
+    if (!fechaString) return '';
+    const fecha = new Date(fechaString);
+    return fecha.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+}
 
     return (
         <Box sx={{
@@ -339,38 +318,96 @@ function CreatedModal({
                                                 Complete los siguientes campos para proceder con la implementación
                                             </Alert>
                                             <Grid container spacing={3}>
+                                                {/* Período de Desarrollo - Select */}
                                                 <Grid item xs={12} md={6}>
-                                                    <TextField
-                                                        fullWidth
-                                                        label={
+                                                    <FormControl fullWidth>
+                                                        <InputLabel id="periodo-desarrollo-label">
                                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                                 <Schedule fontSize="small" />
                                                                 Período de Desarrollo
                                                             </Box>
-                                                        }
-                                                        value={periodoDesarrollo}
-                                                        onChange={(e) => setPeriodoDesarrollo(e.target.value)}
-                                                        placeholder="Ej: Corto plazo (1-3 meses)"
-                                                        variant="outlined"
-                                                        helperText="Indique el tiempo estimado para el desarrollo"
-                                                    />
+                                                        </InputLabel>
+                                                        <Select
+                                                            labelId="periodo-desarrollo-label"
+                                                            value={periodoDesarrollo}
+                                                            label={
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    <Schedule fontSize="small" />
+                                                                    Período de Desarrollo
+                                                                </Box>
+                                                            }
+                                                            onChange={(e) => setPeriodoDesarrollo(e.target.value)}
+                                                        >
+                                                            <MenuItem value="">
+                                                                <em>Seleccione un período</em>
+                                                            </MenuItem>
+                                                            <MenuItem value="Corto plazo (1-3 meses)">
+                                                                Corto plazo (1-3 meses)
+                                                            </MenuItem>
+                                                            <MenuItem value="Mediano plazo (3-6 meses)">
+                                                                Mediano plazo (3-6 meses)
+                                                            </MenuItem>
+                                                            <MenuItem value="Largo plazo (6-12 meses)">
+                                                                Largo plazo (6-12 meses)
+                                                            </MenuItem>
+                                                        </Select>
+                                                        <FormHelperText>Seleccione el tiempo estimado para el desarrollo</FormHelperText>
+                                                    </FormControl>
                                                 </Grid>
+
+                                                {/* Líder Asignado - Select con nombres aleatorios */}
                                                 <Grid item xs={12} md={6}>
-                                                    <TextField
-                                                        fullWidth
-                                                        label={
+                                                    <FormControl fullWidth>
+                                                        <InputLabel id="lider-asignado-label">
                                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                                 <Person fontSize="small" />
                                                                 Líder Asignado
                                                             </Box>
-                                                        }
-                                                        value={liderManager}
-                                                        onChange={(e) => setLiderManager(e.target.value)}
-                                                        placeholder="Ej: Juan Pérez - Área de Innovación"
-                                                        variant="outlined"
-                                                        helperText="Responsable de la implementación"
-                                                    />
+                                                        </InputLabel>
+                                                        <Select
+                                                            labelId="lider-asignado-label"
+                                                            value={liderManager}
+                                                            label={
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    <Person fontSize="small" />
+                                                                    Líder Asignado
+                                                                </Box>
+                                                            }
+                                                            onChange={(e) => setLiderManager(e.target.value)}
+                                                        >
+                                                            <MenuItem value="">
+                                                                <em>Seleccione un líder</em>
+                                                            </MenuItem>
+                                                            <MenuItem value="Ana García - Gerente de Innovación">
+                                                                Ana García - Gerente de Innovación
+                                                            </MenuItem>
+                                                            <MenuItem value="Carlos Rodríguez - Director de Proyectos">
+                                                                Carlos Rodríguez - Director de Proyectos
+                                                            </MenuItem>
+                                                            <MenuItem value="María López - Líder Técnico">
+                                                                María López - Líder Técnico
+                                                            </MenuItem>
+                                                            <MenuItem value="José Martínez - Scrum Master">
+                                                                José Martínez - Scrum Master
+                                                            </MenuItem>
+                                                            <MenuItem value="Laura Sánchez - Product Owner">
+                                                                Laura Sánchez - Product Owner
+                                                            </MenuItem>
+                                                            <MenuItem value="Diego Fernández - Tech Lead">
+                                                                Diego Fernández - Tech Lead
+                                                            </MenuItem>
+                                                            <MenuItem value="Patricia Gómez - Jefa de Desarrollo">
+                                                                Patricia Gómez - Jefa de Desarrollo
+                                                            </MenuItem>
+                                                            <MenuItem value="Ricardo Torres - Arquitecto de Software">
+                                                                Ricardo Torres - Arquitecto de Software
+                                                            </MenuItem>
+                                                        </Select>
+                                                        <FormHelperText>Seleccione el responsable de la implementación</FormHelperText>
+                                                    </FormControl>
                                                 </Grid>
+
+                                                {/* Equipo Asignado - Input normal */}
                                                 <Grid item xs={12} md={6}>
                                                     <TextField
                                                         fullWidth
@@ -387,6 +424,8 @@ function CreatedModal({
                                                         helperText="Miembros del equipo de desarrollo"
                                                     />
                                                 </Grid>
+
+                                                {/* Primera Junta - DatePicker simple sin dependencias */}
                                                 <Grid item xs={12} md={6}>
                                                     <TextField
                                                         fullWidth
@@ -396,18 +435,58 @@ function CreatedModal({
                                                                 Primera Junta
                                                             </Box>
                                                         }
+                                                        type="date"
                                                         value={primeraJunta}
                                                         onChange={(e) => setPrimeraJunta(e.target.value)}
-                                                        placeholder="Ej: 15/12/2024 - Sala de Conferencias"
-                                                        variant="outlined"
-                                                        helperText="Fecha y lugar de la primera reunión"
+                                                        InputLabelProps={{
+                                                            shrink: true,
+                                                        }}
+                                                        inputProps={{
+                                                            min: obtenerFechaMinima(),
+                                                            max: obtenerFechaMaxima(),
+                                                        }}
+                                                        helperText="Seleccione la fecha de la primera reunión (formato: DD/MM/YYYY)"
+                                                        sx={{
+                                                            '& input': {
+                                                                color: 'text.primary',
+                                                            }
+                                                        }}
                                                     />
+                                                </Grid>
+
+                                                {/* Cuadro de Comentarios - Campo de texto grande */}
+                                                <Grid item xs={12}>
+                                                    <Box sx={{ mt: 2 }}>
+                                                        <TextField
+                                                            fullWidth
+                                                            multiline
+                                                            rows={4}
+                                                            label={
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    <Comment fontSize="small" />
+                                                                    Comentarios Adicionales
+                                                                </Box>
+                                                            }
+                                                            value={comentarios}
+                                                            onChange={(e) => setComentarios(e.target.value)}
+                                                            placeholder="Agregue cualquier comentario, observación o nota adicional sobre la implementación..."
+                                                            variant="outlined"
+                                                            helperText="Espacio para observaciones, consideraciones especiales o detalles relevantes del proyecto"
+                                                            sx={{
+                                                                '& .MuiOutlinedInput-root': {
+                                                                    borderRadius: 2,
+                                                                },
+                                                                '& .MuiInputLabel-root': {
+                                                                    color: 'text.secondary',
+                                                                }
+                                                            }}
+                                                        />
+                                                    </Box>
                                                 </Grid>
                                             </Grid>
                                         </Box>
                                     </Grow>
                                 )}
-
                                 {/* Comentarios de rechazo */}
                                 {rejectChecked && (
                                     <Grow in={rejectChecked} timeout={300}>

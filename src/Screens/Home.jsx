@@ -249,19 +249,19 @@ function Home() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               <div className="bg-white/50 p-3 rounded-lg border border-blue-100">
                                 <p className="text-xs text-blue-600 font-semibold mb-1">👤 LÍDER ASIGNADO</p>
-                                <p className="text-gray-800 font-medium">{row.lider || 'Por asignar'}</p>
+                                <p className="text-gray-800 font-medium">{row.lider || '-'}</p>
                               </div>
                               <div className="bg-white/50 p-3 rounded-lg border border-blue-100">
                                 <p className="text-xs text-blue-600 font-semibold mb-1">👥 EQUIPO</p>
-                                <p className="text-gray-800 font-medium">{row.equipo_asignado || 'Por asignar'}</p>
+                                <p className="text-gray-800 font-medium">{row.equipo_asignado || '-'}</p>
                               </div>
                               <div className="bg-white/50 p-3 rounded-lg border border-blue-100">
                                 <p className="text-xs text-blue-600 font-semibold mb-1">📅 PRIMERA JUNTA</p>
-                                <p className="text-gray-800 font-medium">{row.primera_junta || 'Por programar'}</p>
+                                <p className="text-gray-800 font-medium">{row.primera_junta || '-'}</p>
                               </div>
                               <div className="bg-white/50 p-3 rounded-lg border border-blue-100">
                                 <p className="text-xs text-blue-600 font-semibold mb-1">⏱️ PERIODO DESARROLLO</p>
-                                <p className="text-gray-800 font-medium">{row.periodo_desarrollo || 'Por definir'}</p>
+                                <p className="text-gray-800 font-medium">{row.periodo_desarrollo || '-'}</p>
                               </div>
                             </div>
                           </div>

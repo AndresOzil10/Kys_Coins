@@ -41,6 +41,8 @@ import ModalAprobada from '../components/Manager/ApprovedModal'
 import CreatedModal from '../components/Manager/CreateModal'
 import Swal from 'sweetalert2'
 import { styled } from '@mui/material/styles'
+import useProposalLock from '../components/functions/useProposalLock'
+import { useLocation } from 'react-router-dom'
 
 const url = import.meta.env.VITE_API_URL
 
@@ -256,6 +258,8 @@ const CustomPagination = ({
 }
 
 function HomeManager() {
+  const location = useLocation()
+  const { nombre } = location.state || {}
   const [pending, setPending] = useState([])
   const [filteredPending, setFilteredPending] = useState([])
   const [selectedId, setSelectedId] = useState(null)
@@ -280,6 +284,49 @@ function HomeManager() {
   const [primeraJunta, setPrimeraJunta] = useState('')
   const [comentarios, setComentarios] = useState('')
   const [puntosAsignados, setPuntosAsignados] = useState('')
+  const {isProposalLocked, lockProposal, getLockInfo, releaseProposalLock, userSesssionId} = useProposalLock(url) 
+  const [locallyLockedProposals, setLocallyLockedProposals] = useState({})
+
+  const handleOpenModal = async (item) => {
+  // Verificar si está bloqueada
+    if (isProposalLocked(item.id)) {
+      const lockInfo = getLockInfo(item.id)
+      Swal.fire({
+        title: '⚠️ Propuesta en uso',
+        html: lockInfo ? 
+          `Esta propuesta está siendo editada por <strong>${lockInfo.userName}</strong><br>
+          <small>Desde: ${new Date(lockInfo.lockedAt).toLocaleTimeString()}</small>` :
+          'Otro usuario está gestionando esta propuesta en este momento.',
+        icon: 'warning',
+        showCancelButton: false,
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#4F46E5',
+        timer: 4000
+      })
+      return
+    }
+    console.log('Intentando bloquear propuesta:', item.id, nombre)
+    // Intentar bloquear
+    const locked = await lockProposal(item.id, nombre)
+    if (!locked) {
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo bloquear la propuesta. Inténtalo de nuevo.',
+        icon: 'error'
+      })
+      return
+    }
+
+    // Registrar bloqueo local
+    setLocallyLockedProposals(prev => ({
+      ...prev,
+      [item.id]: true
+    }))
+
+    // Abrir modal
+    setSelectedId(item.id)
+    setSelectedStatus(item.estatus)
+  }
 
   // Estados para paginación - AHORA 4 REGISTROS POR PÁGINA
   const [currentPage, setCurrentPage] = useState(1)
@@ -363,7 +410,8 @@ function HomeManager() {
         "periodoDesarrollo": periodoDesarrollo,
         "lider": liderManager,
         "equipoAsignado": equipoAsignado,
-        "primeraJunta": primeraJunta
+        "primeraJunta": primeraJunta,
+        "comentarios": comentarios
       }),
       ...(action === 'reject' && {
         "comentarios": comentarios
@@ -487,6 +535,15 @@ function HomeManager() {
   }, [selectedId])
 
   const closeModal = () => {
+    if (selectedId) {
+      releaseProposalLock(selectedId)
+      // Remover bloqueo local
+      setLocallyLockedProposals(prev => {
+        const newLocks = { ...prev }
+        delete newLocks[selectedId]
+        return newLocks
+      })
+    }
     setSelectedId(null)
     setSelectedItem(null)
     setSelectedStatus(null)
@@ -509,6 +566,95 @@ function HomeManager() {
       tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
+
+  // Función para renderizar el botón de acción
+  const renderActionButton = (item) => {
+  const isLocked = isProposalLocked(item.id)
+  const lockInfo = getLockInfo(item.id)
+  const isLocallyLocked = locallyLockedProposals[item.id]
+
+  // Si está bloqueada por otro usuario
+  if (isLocked && !isLocallyLocked) {
+    return (
+      <Tooltip title={lockInfo ? 
+        `Editando: ${lockInfo.userName}` : 
+        "En uso por otro usuario"
+      }>
+        <span>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Schedule />}
+            disabled
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              borderColor: '#f59e0b',
+              color: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              cursor: 'not-allowed',
+              '&:disabled': {
+                opacity: 0.8
+              }
+            }}
+          >
+            En uso
+          </Button>
+        </span>
+      </Tooltip>
+    )
+  }
+
+  // Si el usuario actual tiene el bloqueo
+  if (isLocallyLocked) {
+    return (
+      <Tooltip title="Tú estás editando esta propuesta">
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<CheckCircle />}
+          onClick={() => {
+            setSelectedId(item.id)
+            setSelectedStatus(item.estatus)
+          }}
+          sx={{
+            borderRadius: 2,
+            textTransform: 'none',
+            backgroundColor: '#10b981',
+            '&:hover': {
+              backgroundColor: '#059669'
+            }
+          }}
+        >
+          Editando...
+        </Button>
+      </Tooltip>
+    )
+  }
+
+  // Propuesta disponible para editar
+  return (
+    <Tooltip title="Ver detalles y tomar acción">
+      <Button
+        variant="contained"
+        size="small"
+        startIcon={<Visibility />}
+        onClick={() => handleOpenModal(item)}
+        sx={{
+          borderRadius: 2,
+          textTransform: 'none',
+          backgroundColor: '#4F46E5',
+          '&:hover': {
+            backgroundColor: '#4338CA'
+          }
+        }}
+      >
+        Gestionar
+      </Button>
+    </Tooltip>
+  )
+  }
+  
 
   return (
     <Box sx={{ 
@@ -737,27 +883,7 @@ function HomeManager() {
                           </Typography>
                         </TableCell>
                         <TableCell align="center">
-                          <Tooltip title="Ver detalles y tomar acción">
-                            <Button
-                              variant="contained"
-                              size="small"
-                              startIcon={<Visibility />}
-                              onClick={() => {
-                                setSelectedId(item.id)
-                                setSelectedStatus(item.estatus)
-                              }}
-                              sx={{
-                                borderRadius: 2,
-                                textTransform: 'none',
-                                backgroundColor: '#4F46E5',
-                                '&:hover': {
-                                  backgroundColor: '#4338CA'
-                                }
-                              }}
-                            >
-                              Gestionar
-                            </Button>
-                          </Tooltip>
+                          {renderActionButton(item)}
                         </TableCell>
                       </TableRow>
                     ))
