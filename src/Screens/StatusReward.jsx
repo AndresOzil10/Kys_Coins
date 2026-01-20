@@ -1,189 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  IconButton,
-  Tooltip,
-  TextField,
-  InputAdornment,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  CircularProgress,
-  Alert,
-  Snackbar,
-  Pagination,
-  TableFooter
-} from '@mui/material';
-import {
-  Search as SearchIcon,
-  FilterList as FilterIcon,
-  CheckCircle as CheckCircleIcon,
-  LocalShipping as LocalShippingIcon,
-  Inventory as InventoryIcon,
-  Refresh as RefreshIcon,
-  Visibility as VisibilityIcon,
-  Edit as EditIcon,
-  Close as CloseIcon
-} from '@mui/icons-material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, IconButton,
+  Tooltip, TextField, InputAdornment, Button, Dialog, DialogTitle, DialogContent, DialogActions,
+  MenuItem, Select, FormControl, InputLabel, Box, Typography, Card, CardContent, CircularProgress, 
+  Alert, Snackbar, Pagination } from '@mui/material';
+import { Search as SearchIcon, FilterList as FilterIcon, CheckCircle as CheckCircleIcon, LocalShipping as LocalShippingIcon, Inventory as InventoryIcon,
+  Refresh as RefreshIcon, Visibility as VisibilityIcon, Edit as EditIcon, Close as CloseIcon } from '@mui/icons-material';
 
-// Datos de ejemplo - en un caso real vendrían de una API
-const mockRewardsData = [
-  { 
-    id: 1, 
-    solicitudId: 'SOL-2024-001', 
-    empleado: 'Juan Pérez', 
-    nomina: 'EMP001', 
-    area: 'Ventas', 
-    premio: 'Tarjeta de regalo Amazon $500', 
-    fechaSolicitud: '2024-01-15', 
-    status: 'pendiente',
-    comentarios: 'Premio por cumplimiento de metas del Q4'
-  },
-  { 
-    id: 2, 
-    solicitudId: 'SOL-2024-002', 
-    empleado: 'María García', 
-    nomina: 'EMP002', 
-    area: 'Recursos Humanos', 
-    premio: 'Días adicionales de vacaciones', 
-    fechaSolicitud: '2024-01-18', 
-    status: 'aprobado',
-    comentarios: 'Reconocimiento por años de servicio'
-  },
-  { 
-    id: 3, 
-    solicitudId: 'SOL-2024-003', 
-    empleado: 'Carlos López', 
-    nomina: 'EMP003', 
-    area: 'TI', 
-    premio: 'Certificado de reconocimiento', 
-    fechaSolicitud: '2024-01-20', 
-    status: 'en_camino',
-    comentarios: 'Premio por proyecto destacado'
-  },
-  { 
-    id: 4, 
-    solicitudId: 'SOL-2024-004', 
-    empleado: 'Ana Rodríguez', 
-    nomina: 'EMP004', 
-    area: 'Finanzas', 
-    premio: 'Bono monetario $1000', 
-    fechaSolicitud: '2024-01-22', 
-    status: 'entregado',
-    comentarios: 'Premio por excelencia operativa'
-  },
-  { 
-    id: 5, 
-    solicitudId: 'SOL-2024-005', 
-    empleado: 'Pedro Martínez', 
-    nomina: 'EMP005', 
-    area: 'Marketing', 
-    premio: 'Curso de especialización', 
-    fechaSolicitud: '2024-01-25', 
-    status: 'pendiente',
-    comentarios: 'Desarrollo profesional'
-  },
-  { 
-    id: 6, 
-    solicitudId: 'SOL-2024-006', 
-    empleado: 'Laura Sánchez', 
-    nomina: 'EMP006', 
-    area: 'Operaciones', 
-    premio: 'Team lunch patrocinado', 
-    fechaSolicitud: '2024-01-28', 
-    status: 'aprobado',
-    comentarios: 'Premio de equipo'
-  },
-  { 
-    id: 7, 
-    solicitudId: 'SOL-2024-007', 
-    empleado: 'Miguel Torres', 
-    nomina: 'EMP007', 
-    area: 'Logística', 
-    premio: 'Smartwatch', 
-    fechaSolicitud: '2024-02-01', 
-    status: 'en_camino',
-    comentarios: 'Premio por innovación'
-  },
-  { 
-    id: 8, 
-    solicitudId: 'SOL-2024-008', 
-    empleado: 'Sofía Ramírez', 
-    nomina: 'EMP008', 
-    area: 'Calidad', 
-    premio: 'Libro especializado', 
-    fechaSolicitud: '2024-02-03', 
-    status: 'entregado',
-    comentarios: 'Premio por certificación'
-  },
-  { 
-    id: 9, 
-    solicitudId: 'SOL-2024-009', 
-    empleado: 'Diego Hernández', 
-    nomina: 'EMP009', 
-    area: 'Ventas', 
-    premio: 'Tablet', 
-    fechaSolicitud: '2024-02-05', 
-    status: 'pendiente',
-    comentarios: 'Premio por superar metas'
-  },
-  { 
-    id: 10, 
-    solicitudId: 'SOL-2024-010', 
-    empleado: 'Elena Castro', 
-    nomina: 'EMP010', 
-    area: 'TI', 
-    premio: 'Auriculares inalámbricos', 
-    fechaSolicitud: '2024-02-08', 
-    status: 'en_camino',
-    comentarios: 'Premio por implementación exitosa'
-  },
-  { 
-    id: 11, 
-    solicitudId: 'SOL-2024-011', 
-    empleado: 'Jorge Flores', 
-    nomina: 'EMP011', 
-    area: 'Recursos Humanos', 
-    premio: 'Reloj inteligente', 
-    fechaSolicitud: '2024-02-10', 
-    status: 'aprobado',
-    comentarios: 'Reconocimiento por liderazgo'
-  },
-  { 
-    id: 12, 
-    solicitudId: 'SOL-2024-012', 
-    empleado: 'Patricia Ruiz', 
-    nomina: 'EMP012', 
-    area: 'Finanzas', 
-    premio: 'Licencia de software', 
-    fechaSolicitud: '2024-02-12', 
-    status: 'entregado',
-    comentarios: 'Premio por eficiencia'
-  },
-];
+
+const url = import.meta.env.VITE_API_URL
+
+const enviarData = async (url, data) => {
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    if (!resp.ok) {
+      throw new Error('Error en la respuesta de la API');
+    }
+    return await resp.json();
+  } catch (error) {
+    console.error("Error en la solicitud:", error)
+    throw error
+  }
+}
 
 // Componente para mostrar el estado con colores
 const StatusChip = ({ status }) => {
   const getStatusConfig = (status) => {
     switch (status) {
-      case 'pendiente':
+      case 'Pendiente':
         return {
           label: 'Pendiente',
           color: 'warning',
@@ -191,7 +40,7 @@ const StatusChip = ({ status }) => {
           bgColor: '#fff3cd',
           textColor: '#856404'
         };
-      case 'aprobado':
+      case 'Aprobado':
         return {
           label: 'Aprobado',
           color: 'info',
@@ -199,7 +48,7 @@ const StatusChip = ({ status }) => {
           bgColor: '#d1ecf1',
           textColor: '#0c5460'
         };
-      case 'en_camino':
+      case 'En Camino':
         return {
           label: 'En Camino',
           color: 'primary',
@@ -207,7 +56,7 @@ const StatusChip = ({ status }) => {
           bgColor: '#cce5ff',
           textColor: '#004085'
         };
-      case 'entregado':
+      case 'Entregado':
         return {
           label: 'Entregado',
           color: 'success',
@@ -215,7 +64,7 @@ const StatusChip = ({ status }) => {
           bgColor: '#d4edda',
           textColor: '#155724'
         };
-      case 'rechazado':
+      case 'Rechazado':
         return {
           label: 'Rechazado',
           color: 'error',
@@ -232,7 +81,7 @@ const StatusChip = ({ status }) => {
           textColor: '#383d41'
         };
     }
-  };
+  }
 
   const config = getStatusConfig(status);
 
@@ -252,7 +101,7 @@ const StatusChip = ({ status }) => {
       }}
     />
   );
-};
+}
 
 function StatusReward() {
   // Estados
@@ -263,8 +112,30 @@ function StatusReward() {
   const [statusFilter, setStatusFilter] = useState('todos');
   const [selectedReward, setSelectedReward] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [newStatus, setNewStatus] = useState('');
+  const [newStatus, setNewStatus] = useState('Pendiente');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  const RequestData = async () => {
+      setLoading(true)
+      const dataToSend = {
+        aksi: "GetRewards",
+      }
+      try {
+        const response = await enviarData(url, dataToSend);
+        setRewards(response.data);
+        setFilteredRewards(response.data);
+      } catch (error) {
+        console.error("Error al solicitar los datos:", error);
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudieron cargar los datos.',
+          icon: 'error',
+          confirmButtonText: 'Aceptar'
+        })
+      } finally {
+        setLoading(false)
+      }
+  }
   
   // Estados para paginación
   const [currentPage, setCurrentPage] = useState(1);
@@ -272,13 +143,8 @@ function StatusReward() {
 
   // Inicializar datos
   useEffect(() => {
-    // Simular carga de datos
-    setTimeout(() => {
-      setRewards(mockRewardsData);
-      setFilteredRewards(mockRewardsData);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    RequestData();
+  }, [])
 
   // Filtrar datos
   useEffect(() => {
@@ -321,16 +187,16 @@ function StatusReward() {
   // Estadísticas
   const stats = {
     total: rewards.length,
-    pendiente: rewards.filter(r => r.status === 'pendiente').length,
-    aprobado: rewards.filter(r => r.status === 'aprobado').length,
-    en_camino: rewards.filter(r => r.status === 'en_camino').length,
-    entregado: rewards.filter(r => r.status === 'entregado').length,
+    pendiente: rewards.filter(r => r.estatus === 'Pendiente').length,
+    aprobado: rewards.filter(r => r.estatus === 'Aprobado').length,
+    en_camino: rewards.filter(r => r.estatus === 'En Camino').length,
+    entregado: rewards.filter(r => r.estatus === 'Entregado').length,
   };
 
   // Abrir diálogo para cambiar estado
   const handleOpenStatusDialog = (reward) => {
     setSelectedReward(reward);
-    setNewStatus(reward.status);
+    setNewStatus(reward.estatus || 'Pendiente');
     setOpenDialog(true);
   };
 
@@ -362,20 +228,6 @@ function StatusReward() {
     });
 
     handleCloseDialog();
-  };
-
-  // Refrescar datos
-  const handleRefresh = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setRewards([...mockRewardsData]); // Simular recarga
-      setLoading(false);
-      setSnackbar({
-        open: true,
-        message: 'Datos actualizados correctamente',
-        severity: 'info'
-      });
-    }, 800);
   };
 
   // Cerrar snackbar
@@ -574,22 +426,22 @@ function StatusReward() {
                         >
                         <TableCell>
                             <Typography variant="body2" sx={{ fontWeight: '600', color: '#1f2937' }}>
-                            {reward.solicitudId}
+                            {reward.id}
                             </Typography>
                         </TableCell>
                         <TableCell>
                             <div>
                             <Typography variant="body2" sx={{ fontWeight: '600' }}>
-                                {reward.empleado}
+                                {reward.nombreCompleto}
                             </Typography>
                             <Typography variant="caption" sx={{ color: 'gray.600' }}>
-                                Nómina: {reward.nomina}
+                                Nómina: {reward.nn}
                             </Typography>
                             </div>
                         </TableCell>
                         <TableCell>
                             <Chip 
-                            label={reward.area} 
+                            label={reward.areaNombre} 
                             size="small" 
                             sx={{ backgroundColor: '#e0e7ff', color: '#3730a3' }}
                             />
@@ -610,7 +462,7 @@ function StatusReward() {
                             </Typography>
                         </TableCell>
                         <TableCell>
-                            <StatusChip status={reward.status} />
+                            <StatusChip status={reward.estatus} />
                         </TableCell>
                         <TableCell align="center">
                             <div className="flex justify-center gap-1">
@@ -752,15 +604,15 @@ function StatusReward() {
                     <FormControl fullWidth>
                       <InputLabel>Nuevo Estado</InputLabel>
                       <Select
-                        value={newStatus}
+                        value={newStatus || ''}
                         label="Nuevo Estado"
-                        onChange={(e) => setNewStatus(e.target.value)}
+                        onChange={(e) => setNewStatus(e.target.value || 'Pendiente')}
                       >
-                        <MenuItem value="pendiente">Pendiente</MenuItem>
-                        <MenuItem value="aprobado">Aprobado</MenuItem>
-                        <MenuItem value="en_camino">En Camino</MenuItem>
-                        <MenuItem value="entregado">Entregado</MenuItem>
-                        <MenuItem value="rechazado">Rechazado</MenuItem>
+                        <MenuItem value="Pendiente">Pendiente</MenuItem>
+                        <MenuItem value="Aprobado">Aprobado</MenuItem>
+                        <MenuItem value="En Camino">En Camino</MenuItem>
+                        <MenuItem value="Entregado">Entregado</MenuItem>
+                        <MenuItem value="Rechazado">Rechazado</MenuItem>
                       </Select>
                     </FormControl>
                   </div>

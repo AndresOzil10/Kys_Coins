@@ -119,13 +119,13 @@ const ShoppStore = () => {
     setModalPay(!ModalPay)
   }
 
-  const handleImageLoad = (itemId) => {
-    setLoadedImages(prev => new Set([...prev, itemId]))
-  }
+  // const handleImageLoad = (itemId) => {
+  //   setLoadedImages(prev => new Set([...prev, itemId]))
+  // }
 
-  const handleImageError = (itemId) => {
-    setLoadedImages(prev => new Set([...prev, itemId]))
-  }
+  // const handleImageError = (itemId) => {
+  //   setLoadedImages(prev => new Set([...prev, itemId]))
+  // }
 
   const openTooltip = () => {
     setIsTooltipOpen(true)
@@ -181,12 +181,12 @@ const ShoppStore = () => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      'Electrónica': '#3B82F6',
       'Hogar': '#10B981',
-      'Oficina': '#8B5CF6',
+      'Otros': '#8B5CF6',
       'General': '#6B7280',
-      'Tecnología': '#EF4444',
-      'Deportes': '#F59E0B'
+      'Tecnologia': '#050505',
+      'Telefonia': '#F59E0B',
+      'Herramientas': '#EF4444'
     }
     return colors[category] || '#6B7280'
   }
@@ -291,7 +291,6 @@ const ShoppStore = () => {
                     <MenuItem value="">Sin orden</MenuItem>
                     <MenuItem value="asc">Menor precio</MenuItem>
                     <MenuItem value="desc">Mayor precio</MenuItem>
-                    <MenuItem value="popular">Más populares</MenuItem>
                   </Select>
                 </Grid>
                 

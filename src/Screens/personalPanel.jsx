@@ -24,7 +24,7 @@ const Panel = () => {
             case 'Reglamento':
                 return <Rules />
             case 'Pedidos':
-                return <Orders />
+                return <Orders nomina={nomina}/>
             default:
                 return 
         }
