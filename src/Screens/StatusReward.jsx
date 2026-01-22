@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, IconButton,
   Tooltip, TextField, InputAdornment, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   MenuItem, Select, FormControl, InputLabel, Box, Typography, Card, CardContent, CircularProgress, 
   Alert, Snackbar, Pagination } from '@mui/material';
 import { Search as SearchIcon, FilterList as FilterIcon, CheckCircle as CheckCircleIcon, LocalShipping as LocalShippingIcon, Inventory as InventoryIcon,
   Refresh as RefreshIcon, Visibility as VisibilityIcon, Edit as EditIcon, Close as CloseIcon } from '@mui/icons-material';
+import Swal from 'sweetalert2';
 
 
 const url = import.meta.env.VITE_API_URL
@@ -153,18 +154,26 @@ function StatusReward() {
     // Filtrar por término de búsqueda
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(reward =>
-        reward.empleado.toLowerCase().includes(term) ||
-        reward.nomina.toLowerCase().includes(term) ||
-        reward.solicitudId.toLowerCase().includes(term) ||
-        reward.premio.toLowerCase().includes(term) ||
-        reward.area.toLowerCase().includes(term)
-      );
+      filtered = filtered.filter(reward =>{
+        const nombreCompleto = String(reward.nombreCompleto || '').toLowerCase();
+        const nn = String(reward.nn || '').toLowerCase();
+        const id = String(reward.id || '').toLowerCase();
+        const premio = String(reward.premio || '').toLowerCase();
+        const areaNombre = String(reward.areaNombre || '').toLowerCase();
+
+         return (
+          nombreCompleto.includes(term) ||
+          nn.includes(term) ||
+          id.includes(term) ||
+          premio.includes(term) ||
+          areaNombre.includes(term)
+        );
+      });
     }
 
     // Filtrar por estado
     if (statusFilter !== 'todos') {
-      filtered = filtered.filter(reward => reward.status === statusFilter);
+      filtered = filtered.filter(reward => reward.estatus === statusFilter);
     }
 
     setFilteredRewards(filtered);
@@ -208,26 +217,37 @@ function StatusReward() {
   };
 
   // Actualizar estado del premio
-  const handleUpdateStatus = () => {
+  const handleUpdateStatus = async () => {
     if (!selectedReward || !newStatus) return;
-
-    // Simular actualización en API
-    setRewards(prevRewards =>
-      prevRewards.map(reward =>
-        reward.id === selectedReward.id
-          ? { ...reward, status: newStatus }
-          : reward
-      )
-    );
-
-    // Mostrar notificación
-    setSnackbar({
-      open: true,
-      message: `Estado de la solicitud ${selectedReward.solicitudId} actualizado a ${newStatus}`,
-      severity: 'success'
-    });
-
-    handleCloseDialog();
+    setLoading(true)
+    const dataToSend = {
+      aksi: "UpdateStatusReward",
+      id: selectedReward.id,
+      estatus: newStatus
+    }
+      try {
+        const response = await enviarData(url, dataToSend);
+        if (response.estado === 'success') {
+          // Mostrar notificación
+          setSnackbar({
+            open: true,
+            message: `Estado de la solicitud ${selectedReward.id} actualizado a ${newStatus}`,
+            severity: 'success'
+          });
+        }
+      } catch (error) {
+        console.error("Error al solicitar los datos:", error);
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudieron cargar los datos.',
+          icon: 'error',
+          confirmButtonText: 'Aceptar'
+        })
+      } finally {
+        setLoading(false)
+      }
+    handleCloseDialog()
+    RequestData()
   };
 
   // Cerrar snackbar
@@ -353,11 +373,9 @@ function StatusReward() {
                   }
                 >
                   <MenuItem value="todos">Todos los estados</MenuItem>
-                  <MenuItem value="pendiente">Pendiente</MenuItem>
-                  <MenuItem value="aprobado">Aprobado</MenuItem>
-                  <MenuItem value="en_camino">En Camino</MenuItem>
+                  <MenuItem value="Pendiente">Pendiente</MenuItem>
+                  <MenuItem value="En Camino">En Camino</MenuItem>
                   <MenuItem value="entregado">Entregado</MenuItem>
-                  <MenuItem value="rechazado">Rechazado</MenuItem>
                 </Select>
               </FormControl>
             </div>
@@ -466,20 +484,23 @@ function StatusReward() {
                         </TableCell>
                         <TableCell align="center">
                             <div className="flex justify-center gap-1">
-                            <Tooltip title="Ver detalles">
-                                <IconButton size="small" sx={{ color: '#4f46e5' }}>
-                                <VisibilityIcon fontSize="small" />
-                                </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Cambiar estado">
-                                <IconButton 
-                                size="small" 
-                                sx={{ color: '#059669' }}
-                                onClick={() => handleOpenStatusDialog(reward)}
-                                >
-                                <EditIcon fontSize="small" />
-                                </IconButton>
-                            </Tooltip>
+                              <Tooltip title="Cambiar estado">
+                                  { reward.estatus == "Entregado" ? 
+                                  <IconButton
+                                  size="small" 
+                                  sx={{ color: '#059669' }}
+                                  disabled
+                                  >
+                                  <EditIcon fontSize="small" />
+                                  </IconButton>
+                                  : <IconButton 
+                                  size="small" 
+                                  sx={{ color: '#059669' }}
+                                  onClick={() => handleOpenStatusDialog(reward)}
+                                  >
+                                  <EditIcon fontSize="small" />
+                                  </IconButton> }
+                              </Tooltip>
                             </div>
                         </TableCell>
                         </TableRow>
@@ -568,7 +589,7 @@ function StatusReward() {
                     ID de Solicitud
                   </Typography>
                   <Typography variant="body1" sx={{ fontWeight: '600' }}>
-                    {selectedReward.solicitudId}
+                    {selectedReward.id}
                   </Typography>
                 </div>
                 
@@ -578,7 +599,7 @@ function StatusReward() {
                       Empleado
                     </Typography>
                     <Typography variant="body1">
-                      {selectedReward.empleado}
+                      {selectedReward.nombreCompleto} Nómina: {selectedReward.nn}
                     </Typography>
                   </div>
                   <div>
@@ -597,7 +618,7 @@ function StatusReward() {
                       Estado Actual
                     </Typography>
                     <div className="mt-1">
-                      <StatusChip status={selectedReward.status} />
+                      <StatusChip status={selectedReward.estatus} />
                     </div>
                   </div>
                   <div>
@@ -608,11 +629,9 @@ function StatusReward() {
                         label="Nuevo Estado"
                         onChange={(e) => setNewStatus(e.target.value || 'Pendiente')}
                       >
-                        <MenuItem value="Pendiente">Pendiente</MenuItem>
-                        <MenuItem value="Aprobado">Aprobado</MenuItem>
+                        <MenuItem value="Pendiente" disabled>Pendiente</MenuItem>
                         <MenuItem value="En Camino">En Camino</MenuItem>
                         <MenuItem value="Entregado">Entregado</MenuItem>
-                        <MenuItem value="Rechazado">Rechazado</MenuItem>
                       </Select>
                     </FormControl>
                   </div>
@@ -623,7 +642,7 @@ function StatusReward() {
                     Comentarios
                   </Typography>
                   <Typography variant="body1">
-                    {selectedReward.comentarios || 'Sin comentarios'}
+                    {selectedReward.comentarios || '-'}
                   </Typography>
                 </div>
               </div>
