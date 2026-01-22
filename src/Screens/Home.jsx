@@ -249,7 +249,7 @@ function Home() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               <div className="bg-white/50 p-3 rounded-lg border border-blue-100">
                                 <p className="text-xs text-blue-600 font-semibold mb-1">👤 LÍDER ASIGNADO</p>
-                                <p className="text-gray-800 font-medium">{row.lider || '-'}</p>
+                                <p className="text-gray-800 font-medium">{row.nombre || '-'}</p>
                               </div>
                               <div className="bg-white/50 p-3 rounded-lg border border-blue-100">
                                 <p className="text-xs text-blue-600 font-semibold mb-1">👥 EQUIPO</p>

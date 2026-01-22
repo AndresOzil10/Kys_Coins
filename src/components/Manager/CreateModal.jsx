@@ -3,7 +3,22 @@ import { Box, Typography, Card, CardContent, TextField, Checkbox, Button, Grid, 
          Divider, Paper, Alert, Stack, IconButton, Fade, Grow, FormControl, InputLabel, Select, MenuItem, 
          FormHelperText } from '@mui/material'
 import { styled } from '@mui/material/styles'
+import { useEffect, useState } from 'react' // Removí 'use' que no es necesario
+import Swal from 'sweetalert2'
 
+const url = import.meta.env.VITE_API_URL
+
+const enviarData = async (url, data) => {
+  const resp = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  const json = await resp.json()
+  return json
+}
 // Componentes estilizados
 const StyledCard = styled(Card)(({ theme }) => ({
   borderRadius: theme.spacing(2),
@@ -13,23 +28,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
   overflow: 'hidden'
 }))
 
-const DecisionChip = styled(Chip)(({ theme, decision }) => ({
-  fontWeight: 600,
-  backgroundColor: decision === 'accept' 
-    ? 'rgba(34, 197, 94, 0.1)' 
-    : 'rgba(239, 68, 68, 0.1)',
-  color: decision === 'accept' 
-    ? theme.palette.success.main 
-    : theme.palette.error.main,
-  border: `1px solid ${decision === 'accept' 
-    ? theme.palette.success.light 
-    : theme.palette.error.light}`,
-  '&:hover': {
-    backgroundColor: decision === 'accept' 
-      ? 'rgba(34, 197, 94, 0.2)' 
-      : 'rgba(239, 68, 68, 0.2)'
-  }
-}))
 
 const SectionHeader = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -44,6 +42,37 @@ function CreatedModal({ selectedId, selectedItem, acceptChecked, setAcceptChecke
     setRejectChecked, periodoDesarrollo, setPeriodoDesarrollo, liderManager, setLiderManager, 
     equipoAsignado, setEquipoAsignado, primeraJunta, setPrimeraJunta, comentarios, setComentarios, 
     handleSave, closeModal, actionLoading }) {
+
+const [loadingLideres, setLoadingLideres] = useState(false)
+const [lideresData, setLideresData] = useState([]) // Nuevo estado para el array de líderes
+
+const fetchData = async () => {
+    setLoadingLideres(true)
+    const Pendientes = {
+        "aksi": "LiderManager",
+    }
+    try {
+        const respuesta = await enviarData(url, Pendientes)
+        if (respuesta.estado === 'success') {
+            const data = respuesta.data || []
+            setLideresData(data) // Guardamos en el nuevo estado
+        }
+    } catch (error) {
+        console.error("Error fetching leaders:", error)
+        Swal.fire({
+            title: 'Error',
+            text: 'No se pudieron cargar los líderes',
+            icon: 'error'
+        })
+    } finally {
+        setLoadingLideres(false)
+    }
+}
+
+useEffect(() => {
+    fetchData()
+}, [])
+
     
 const handleAcceptChange = (e) => {
     setAcceptChecked(e.target.checked)
@@ -66,17 +95,6 @@ const obtenerFechaMaxima = () => {
     const unAnioDespues = new Date(hoy);
     unAnioDespues.setFullYear(hoy.getFullYear() + 1);
     return unAnioDespues.toISOString().split('T')[0];
-}
-
-// Función para formatear fecha para display (opcional)
-const formatearFechaParaDisplay = (fechaString) => {
-    if (!fechaString) return '';
-    const fecha = new Date(fechaString);
-    return fecha.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
 }
 
     return (
@@ -355,7 +373,7 @@ const formatearFechaParaDisplay = (fechaString) => {
                                                     </FormControl>
                                                 </Grid>
 
-                                                {/* Líder Asignado - Select con nombres aleatorios */}
+                                                {/* Líder Asignado - Select con datos del backend */}
                                                 <Grid item xs={12} md={6}>
                                                     <FormControl fullWidth>
                                                         <InputLabel id="lider-asignado-label">
@@ -374,36 +392,35 @@ const formatearFechaParaDisplay = (fechaString) => {
                                                                 </Box>
                                                             }
                                                             onChange={(e) => setLiderManager(e.target.value)}
+                                                            disabled={loadingLideres || lideresData.length === 0}
                                                         >
                                                             <MenuItem value="">
                                                                 <em>Seleccione un líder</em>
                                                             </MenuItem>
-                                                            <MenuItem value="Ana García - Gerente de Innovación">
-                                                                Ana García - Gerente de Innovación
-                                                            </MenuItem>
-                                                            <MenuItem value="Carlos Rodríguez - Director de Proyectos">
-                                                                Carlos Rodríguez - Director de Proyectos
-                                                            </MenuItem>
-                                                            <MenuItem value="María López - Líder Técnico">
-                                                                María López - Líder Técnico
-                                                            </MenuItem>
-                                                            <MenuItem value="José Martínez - Scrum Master">
-                                                                José Martínez - Scrum Master
-                                                            </MenuItem>
-                                                            <MenuItem value="Laura Sánchez - Product Owner">
-                                                                Laura Sánchez - Product Owner
-                                                            </MenuItem>
-                                                            <MenuItem value="Diego Fernández - Tech Lead">
-                                                                Diego Fernández - Tech Lead
-                                                            </MenuItem>
-                                                            <MenuItem value="Patricia Gómez - Jefa de Desarrollo">
-                                                                Patricia Gómez - Jefa de Desarrollo
-                                                            </MenuItem>
-                                                            <MenuItem value="Ricardo Torres - Arquitecto de Software">
-                                                                Ricardo Torres - Arquitecto de Software
-                                                            </MenuItem>
+                                                            {loadingLideres ? (
+                                                                <MenuItem value="" disabled>
+                                                                    <CircularProgress size={20} sx={{ mr: 1 }} />
+                                                                    Cargando líderes...
+                                                                </MenuItem>
+                                                            ) : lideresData.length > 0 ? (
+                                                                lideresData.map((lider, index) => (
+                                                                    <MenuItem key={index} value={lider.id}>
+                                                                        {lider.nombre}
+                                                                    </MenuItem>
+                                                                ))
+                                                            ) : (
+                                                                <MenuItem value="" disabled>
+                                                                    No hay líderes disponibles
+                                                                </MenuItem>
+                                                            )}
                                                         </Select>
-                                                        <FormHelperText>Seleccione el responsable de la implementación</FormHelperText>
+                                                        <FormHelperText>
+                                                            {loadingLideres 
+                                                                ? "Cargando lista de líderes..." 
+                                                                : lideresData.length === 0 
+                                                                    ? "No hay líderes disponibles" 
+                                                                    : "Seleccione el responsable de la implementación"}
+                                                        </FormHelperText>
                                                     </FormControl>
                                                 </Grid>
 
@@ -445,7 +462,7 @@ const formatearFechaParaDisplay = (fechaString) => {
                                                             min: obtenerFechaMinima(),
                                                             max: obtenerFechaMaxima(),
                                                         }}
-                                                        helperText="Seleccione la fecha de la primera reunión (formato: DD/MM/YYYY)"
+                                                        helperText="Seleccione la fecha de la primera reunión"
                                                         sx={{
                                                             '& input': {
                                                                 color: 'text.primary',

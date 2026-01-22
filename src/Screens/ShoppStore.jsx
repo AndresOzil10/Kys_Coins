@@ -191,6 +191,14 @@ const ShoppStore = () => {
     return colors[category] || '#6B7280'
   }
 
+  const cartSummary = cart.map(item => ({
+    id: item.id,
+    nombre: item.nombre,
+    quantity: item.quantity,
+    puntos: item.puntos,
+    subtotal: item.puntos * item.quantity
+  }));
+
   return (
     <Box sx={{ 
       minHeight: '100vh',
@@ -881,7 +889,7 @@ const ShoppStore = () => {
 
       {/* Modal de pago */}
       {ModalPay && (
-        <TablePay toggleModalPay={toggleModalPay} nomina={nomina} total={total} />
+        <TablePay toggleModalPay={toggleModalPay} nomina={nomina} total={total} cartSummary={cartSummary} />
       )}
 
       {/* Footer */}

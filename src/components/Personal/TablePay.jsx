@@ -23,7 +23,7 @@ const enviarData = async (url, data) => {
   }
 }
 
-function TablePay({toggleModalPay, total}) {
+function TablePay({toggleModalPay, total, cartSummary}) {
     const location = useLocation()
 
     const { nomina } = location.state || {}
@@ -68,12 +68,14 @@ function TablePay({toggleModalPay, total}) {
             aksi: 'PaySelectedPoints',
             nomina,
             total: total,
-            ids: selected
+            ids: selected,
+            ids_product: cartSummary.map(item => item.id)
         }
+        //console.log(payload)
 
         try {
             const response = await enviarData(url, payload)
-            console.log(response.estado)
+            //console.log(response.estado)
             if (response.estado === 'success') {
               toggleModalPay();
               Swal.fire({
