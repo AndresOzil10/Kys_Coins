@@ -339,6 +339,29 @@ const ShoppStore = () => {
         </Card>
       </motion.div>
 
+      {/* Banner de advertencia - AGREGAR AQUÍ */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Alert 
+          severity="info" 
+          icon={<VerifiedIcon />}
+          sx={{ 
+            mb: 3, 
+            borderRadius: 3,
+            background: 'linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)',
+            border: '1px solid #bfdbfe'
+          }}
+        >
+          <Typography variant="body2">
+            <strong>Nota importante:</strong> Las imágenes mostradas son únicamente de referencia. 
+            Los productos pueden variar en apariencia.
+          </Typography>
+        </Alert>
+      </motion.div>
+
       {/* Stats Cards */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

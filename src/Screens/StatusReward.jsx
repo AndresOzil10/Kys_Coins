@@ -7,7 +7,6 @@ import { Search as SearchIcon, FilterList as FilterIcon, CheckCircle as CheckCir
   Refresh as RefreshIcon, Visibility as VisibilityIcon, Edit as EditIcon, Close as CloseIcon } from '@mui/icons-material';
 import Swal from 'sweetalert2';
 
-
 const url = import.meta.env.VITE_API_URL
 
 const enviarData = async (url, data) => {
@@ -105,7 +104,7 @@ const StatusChip = ({ status }) => {
 }
 
 function StatusReward() {
-  // Estados
+  // Estados - Inicializar como array vacío en lugar de null o undefined
   const [rewards, setRewards] = useState([]);
   const [filteredRewards, setFilteredRewards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -123,10 +122,14 @@ function StatusReward() {
       }
       try {
         const response = await enviarData(url, dataToSend);
-        setRewards(response.data);
-        setFilteredRewards(response.data);
+        // Asegurarse de que response.data sea un array
+        const dataArray = Array.isArray(response.data) ? response.data : [];
+        setRewards(dataArray);
+        setFilteredRewards(dataArray);
       } catch (error) {
         console.error("Error al solicitar los datos:", error);
+        setRewards([]);
+        setFilteredRewards([]);
         Swal.fire({
           title: 'Error',
           text: 'No se pudieron cargar los datos.',
@@ -149,19 +152,28 @@ function StatusReward() {
 
   // Filtrar datos
   useEffect(() => {
-    let filtered = rewards;
+    // Asegurarse de que rewards sea un array
+    if (!Array.isArray(rewards)) {
+      setFilteredRewards([]);
+      return;
+    }
+    
+    let filtered = [...rewards]; // Crear una copia del array
 
     // Filtrar por término de búsqueda
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(reward =>{
+      filtered = filtered.filter(reward => {
+        // Asegurarse de que reward existe y tiene las propiedades necesarias
+        if (!reward) return false;
+        
         const nombreCompleto = String(reward.nombreCompleto || '').toLowerCase();
         const nn = String(reward.nn || '').toLowerCase();
         const id = String(reward.id || '').toLowerCase();
         const premio = String(reward.premio || '').toLowerCase();
         const areaNombre = String(reward.areaNombre || '').toLowerCase();
 
-         return (
+        return (
           nombreCompleto.includes(term) ||
           nn.includes(term) ||
           id.includes(term) ||
@@ -173,18 +185,22 @@ function StatusReward() {
 
     // Filtrar por estado
     if (statusFilter !== 'todos') {
-      filtered = filtered.filter(reward => reward.estatus === statusFilter);
+      filtered = filtered.filter(reward => reward && reward.estatus === statusFilter);
     }
 
     setFilteredRewards(filtered);
     setCurrentPage(1); // Resetear a la primera página al filtrar
   }, [searchTerm, statusFilter, rewards]);
 
-  // Calcular datos paginados
+  // Calcular datos paginados - Proteger contra valores undefined/null
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-  const currentRows = filteredRewards.slice(indexOfFirstRow, indexOfLastRow);
-  const totalPages = Math.ceil(filteredRewards.length / rowsPerPage);
+  const currentRows = Array.isArray(filteredRewards) 
+    ? filteredRewards.slice(indexOfFirstRow, indexOfLastRow)
+    : [];
+  const totalPages = Array.isArray(filteredRewards) 
+    ? Math.ceil(filteredRewards.length / rowsPerPage) 
+    : 0;
 
   // Manejar cambio de página
   const handlePageChange = (event, page) => {
@@ -193,19 +209,19 @@ function StatusReward() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Estadísticas
+  // Estadísticas - Proteger contra arrays null/undefined
   const stats = {
-    total: rewards.length,
-    pendiente: rewards.filter(r => r.estatus === 'Pendiente').length,
-    aprobado: rewards.filter(r => r.estatus === 'Aprobado').length,
-    en_camino: rewards.filter(r => r.estatus === 'En Camino').length,
-    entregado: rewards.filter(r => r.estatus === 'Entregado').length,
+    total: Array.isArray(rewards) ? rewards.length : 0,
+    pendiente: Array.isArray(rewards) ? rewards.filter(r => r && r.estatus === 'Pendiente').length : 0,
+    aprobado: Array.isArray(rewards) ? rewards.filter(r => r && r.estatus === 'Aprobado').length : 0,
+    en_camino: Array.isArray(rewards) ? rewards.filter(r => r && r.estatus === 'En Camino').length : 0,
+    entregado: Array.isArray(rewards) ? rewards.filter(r => r && r.estatus === 'Entregado').length : 0,
   };
 
   // Abrir diálogo para cambiar estado
   const handleOpenStatusDialog = (reward) => {
     setSelectedReward(reward);
-    setNewStatus(reward.estatus || 'Pendiente');
+    setNewStatus(reward?.estatus || 'Pendiente');
     setOpenDialog(true);
   };
 
@@ -213,13 +229,13 @@ function StatusReward() {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedReward(null);
-    setNewStatus('');
+    setNewStatus('Pendiente');
   };
 
   // Actualizar estado del premio
   const handleUpdateStatus = async () => {
     if (!selectedReward || !newStatus) return;
-    setLoading(true)
+    setLoading(true);
     const dataToSend = {
       aksi: "UpdateStatusReward",
       id: selectedReward.id,
@@ -234,20 +250,21 @@ function StatusReward() {
             message: `Estado de la solicitud ${selectedReward.id} actualizado a ${newStatus}`,
             severity: 'success'
           });
+          // Recargar datos después de actualizar
+          await RequestData();
         }
       } catch (error) {
-        console.error("Error al solicitar los datos:", error);
+        console.error("Error al actualizar el estado:", error);
         Swal.fire({
           title: 'Error',
-          text: 'No se pudieron cargar los datos.',
+          text: 'No se pudo actualizar el estado.',
           icon: 'error',
           confirmButtonText: 'Aceptar'
         })
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    handleCloseDialog()
-    RequestData()
+    handleCloseDialog();
   };
 
   // Cerrar snackbar
@@ -257,8 +274,13 @@ function StatusReward() {
 
   // Formatear fecha
   const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('es-ES', options);
+    if (!dateString) return 'No especificada';
+    try {
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString('es-ES', options);
+    } catch (error) {
+      return 'Fecha inválida';
+    }
   };
 
   return (
@@ -375,21 +397,21 @@ function StatusReward() {
                   <MenuItem value="todos">Todos los estados</MenuItem>
                   <MenuItem value="Pendiente">Pendiente</MenuItem>
                   <MenuItem value="En Camino">En Camino</MenuItem>
-                  <MenuItem value="entregado">Entregado</MenuItem>
+                  <MenuItem value="Entregado">Entregado</MenuItem>
                 </Select>
               </FormControl>
             </div>
           </Paper>
         </div>
 
-        {/* Tabla de premios - CON MARGIN BOTTOM DE 15px */}
+        {/* Tabla de premios */}
         <div className="px-4 md:px-6 lg:px-8 mb-15">
             <Paper 
             elevation={0} 
             sx={{ 
                 borderRadius: 3, 
                 overflow: 'hidden', 
-                mb: '15px'  // Cambié de mb: 3 a mb: '15px'
+                mb: '15px'
             }}
             >
             <TableContainer>
@@ -433,7 +455,7 @@ function StatusReward() {
                         </TableCell>
                     </TableRow>
                     ) : (
-                    currentRows.map((reward) => (
+                    currentRows.map((reward) => reward && (
                         <TableRow 
                         key={reward.id}
                         hover
@@ -450,23 +472,23 @@ function StatusReward() {
                         <TableCell>
                             <div>
                             <Typography variant="body2" sx={{ fontWeight: '600' }}>
-                                {reward.nombreCompleto}
+                                {reward.nombreCompleto || 'No especificado'}
                             </Typography>
                             <Typography variant="caption" sx={{ color: 'gray.600' }}>
-                                Nómina: {reward.nn}
+                                Nómina: {reward.nn || 'No especificada'}
                             </Typography>
                             </div>
                         </TableCell>
                         <TableCell>
                             <Chip 
-                            label={reward.areaNombre} 
+                            label={reward.areaNombre || 'Sin área'} 
                             size="small" 
                             sx={{ backgroundColor: '#e0e7ff', color: '#3730a3' }}
                             />
                         </TableCell>
                         <TableCell>
                             <Typography variant="body2">
-                            {reward.premio}
+                            {reward.premio || 'No especificado'}
                             </Typography>
                             {reward.comentarios && (
                             <Typography variant="caption" sx={{ color: 'gray.600', display: 'block', mt: 0.5 }}>
@@ -485,7 +507,7 @@ function StatusReward() {
                         <TableCell align="center">
                             <div className="flex justify-center gap-1">
                               <Tooltip title="Cambiar estado">
-                                  { reward.estatus == "Entregado" ? 
+                                  { reward.estatus === "Entregado" ? 
                                   <IconButton
                                   size="small" 
                                   sx={{ color: '#059669' }}
@@ -612,7 +634,7 @@ function StatusReward() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap=4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Typography variant="subtitle2" color="textSecondary">
                       Estado Actual
@@ -656,7 +678,7 @@ function StatusReward() {
             <Button
               variant="contained"
               onClick={handleUpdateStatus}
-              disabled={!newStatus || newStatus === selectedReward?.status}
+              disabled={!newStatus || newStatus === selectedReward?.estatus}
               sx={{
                 backgroundColor: '#4f46e5',
                 '&:hover': { backgroundColor: '#4338ca' }

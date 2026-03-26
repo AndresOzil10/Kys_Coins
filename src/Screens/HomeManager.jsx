@@ -328,6 +328,11 @@ function HomeManager() {
     setSelectedStatus(item.estatus)
   }
 
+  //Editar detalles de implementacion
+  const handleSaveEdit = async () => {
+    console.log('Guardando cambios para propuesta ID:', selectedId)   
+  }
+
   // Estados para paginación - AHORA 4 REGISTROS POR PÁGINA
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 4 // Cambiado de 8 a 4
@@ -965,6 +970,15 @@ function HomeManager() {
           closeModal={closeModal}
           loading={loading}
           actionLoad={actionLoad}
+          handleSaveEdit={handleSaveEdit}
+          periodoDesarrollo={periodoDesarrollo}
+          setPeriodoDesarrollo={setPeriodoDesarrollo}
+          liderManager={liderManager}
+          setLiderManager={setLiderManager}
+          equipoAsignado={equipoAsignado}
+          setEquipoAsignado={setEquipoAsignado}
+          primeraJunta={primeraJunta}
+          setPrimeraJunta={setPrimeraJunta}
         />
       )}
     </Box>

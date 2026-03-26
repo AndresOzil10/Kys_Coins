@@ -1,4 +1,4 @@
-import logo from '../assets/images/kayser_logo.webp'
+import logo from '../assets/images/kayser_logo.png'
 import user from "../assets/gif/user.gif"
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'

@@ -691,7 +691,7 @@ function Home() {
                           />
                           <div className="label">
                             <span className="label-text-alt text-gray-500">
-                              {descripcion.length}/500 caracteres
+                              {descripcion.length}/2000 caracteres
                             </span>
                           </div>
                         </div>

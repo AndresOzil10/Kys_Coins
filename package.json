@@ -1,12 +1,13 @@
 {
   "name": "kys_coins",
   "private": true,
-  "homepage": "http://127.0.0.1/kyspoints/",
+  "homepage": "http://10.144.13.5:8080/WebSites/KysPoints/",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:iis":"vite build --base=/http://10.144.13.5:8080/WebSites/KysPoints/",
     "lint": "eslint .",
     "preview": "vite preview"
   },

@@ -1,9 +1,9 @@
-import { Visibility, CheckCircle, Cancel, Schedule,Person,Groups,Event,Comment,Save,Close} from '@mui/icons-material'
+import { Visibility, CheckCircle, Cancel, Schedule, Person, Groups, Event, Comment, Save, Close } from '@mui/icons-material'
 import { Box, Typography, Card, CardContent, TextField, Checkbox, Button, Grid, Chip, CircularProgress, 
          Divider, Paper, Alert, Stack, IconButton, Fade, Grow, FormControl, InputLabel, Select, MenuItem, 
          FormHelperText } from '@mui/material'
 import { styled } from '@mui/material/styles'
-import { useEffect, useState } from 'react' // Removí 'use' que no es necesario
+import { useEffect, useState } from 'react'
 import Swal from 'sweetalert2'
 
 const url = import.meta.env.VITE_API_URL
@@ -19,6 +19,7 @@ const enviarData = async (url, data) => {
   const json = await resp.json()
   return json
 }
+
 // Componentes estilizados
 const StyledCard = styled(Card)(({ theme }) => ({
   borderRadius: theme.spacing(2),
@@ -27,7 +28,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
   borderColor: theme.palette.divider,
   overflow: 'hidden'
 }))
-
 
 const SectionHeader = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -38,64 +38,78 @@ const SectionHeader = styled(Box)(({ theme }) => ({
   borderBottom: `2px solid ${theme.palette.divider}`
 }))
 
+// Componente estilizado para la descripción - MÁS ANCHO Y MENOS ALTO
+const DescriptionTextField = styled(TextField)(({ theme }) => ({
+  '& .MuiOutlinedInput-root': {
+    backgroundColor: 'action.hover',
+    '& textarea': {
+      fontSize: '0.95rem',
+      lineHeight: 1.5,
+      padding: theme.spacing(1.5),
+      minHeight: '80px !important' // Altura mínima reducida
+    }
+  },
+  '& .MuiInputLabel-root': {
+    fontSize: '0.9rem'
+  }
+}))
+
 function CreatedModal({ selectedId, selectedItem, acceptChecked, setAcceptChecked, rejectChecked, 
     setRejectChecked, periodoDesarrollo, setPeriodoDesarrollo, liderManager, setLiderManager, 
     equipoAsignado, setEquipoAsignado, primeraJunta, setPrimeraJunta, comentarios, setComentarios, 
     handleSave, closeModal, actionLoading }) {
 
-const [loadingLideres, setLoadingLideres] = useState(false)
-const [lideresData, setLideresData] = useState([]) // Nuevo estado para el array de líderes
+    const [loadingLideres, setLoadingLideres] = useState(false)
+    const [lideresData, setLideresData] = useState([])
 
-const fetchData = async () => {
-    setLoadingLideres(true)
-    const Pendientes = {
-        "aksi": "LiderManager",
-    }
-    try {
-        const respuesta = await enviarData(url, Pendientes)
-        if (respuesta.estado === 'success') {
-            const data = respuesta.data || []
-            setLideresData(data) // Guardamos en el nuevo estado
+    const fetchData = async () => {
+        setLoadingLideres(true)
+        const Pendientes = {
+            "aksi": "LiderManager",
         }
-    } catch (error) {
-        console.error("Error fetching leaders:", error)
-        Swal.fire({
-            title: 'Error',
-            text: 'No se pudieron cargar los líderes',
-            icon: 'error'
-        })
-    } finally {
-        setLoadingLideres(false)
+        try {
+            const respuesta = await enviarData(url, Pendientes)
+            if (respuesta.estado === 'success') {
+                const data = respuesta.data || []
+                setLideresData(data)
+            }
+        } catch (error) {
+            console.error("Error fetching leaders:", error)
+            Swal.fire({
+                title: 'Error',
+                text: 'No se pudieron cargar los líderes',
+                icon: 'error'
+            })
+        } finally {
+            setLoadingLideres(false)
+        }
     }
-}
 
-useEffect(() => {
-    fetchData()
-}, [])
+    useEffect(() => {
+        fetchData()
+    }, [])
 
-    
-const handleAcceptChange = (e) => {
-    setAcceptChecked(e.target.checked)
-    if (e.target.checked) setRejectChecked(false)
-}
+    const handleAcceptChange = (e) => {
+        setAcceptChecked(e.target.checked)
+        if (e.target.checked) setRejectChecked(false)
+    }
 
-const handleRejectChange = (e) => {
-    setRejectChecked(e.target.checked)
-    if (e.target.checked) setAcceptChecked(false)
-}
+    const handleRejectChange = (e) => {
+        setRejectChecked(e.target.checked)
+        if (e.target.checked) setAcceptChecked(false)
+    }
 
-    // Funciones para manejar fechas sin date-fns
-const obtenerFechaMinima = () => {
-    const hoy = new Date();
-    return hoy.toISOString().split('T')[0]; // Formato YYYY-MM-DD
-}
+    const obtenerFechaMinima = () => {
+        const hoy = new Date();
+        return hoy.toISOString().split('T')[0];
+    }
 
-const obtenerFechaMaxima = () => {
-    const hoy = new Date();
-    const unAnioDespues = new Date(hoy);
-    unAnioDespues.setFullYear(hoy.getFullYear() + 1);
-    return unAnioDespues.toISOString().split('T')[0];
-}
+    const obtenerFechaMaxima = () => {
+        const hoy = new Date();
+        const unAnioDespues = new Date(hoy);
+        unAnioDespues.setFullYear(hoy.getFullYear() + 1);
+        return unAnioDespues.toISOString().split('T')[0];
+    }
 
     return (
         <Box sx={{
@@ -115,7 +129,7 @@ const obtenerFechaMaxima = () => {
             <Fade in={true} timeout={300}>
                 <StyledCard sx={{
                     width: '100%',
-                    maxWidth: 900,
+                    maxWidth: 1400, // Aumentado de 1200 a 1400 para más ancho
                     maxHeight: '90vh',
                     overflow: 'hidden'
                 }}>
@@ -154,7 +168,8 @@ const obtenerFechaMaxima = () => {
                                 </SectionHeader>
 
                                 <Grid container spacing={3} sx={{ mb: 4 }}>
-                                    <Grid item xs={12} md={6}>
+                                    {/* Título - Ahora ocupa toda la fila */}
+                                    <Grid item xs={12}>
                                         <TextField
                                             fullWidth
                                             label="Título"
@@ -163,6 +178,8 @@ const obtenerFechaMaxima = () => {
                                                 readOnly: true,
                                             }}
                                             variant="outlined"
+                                            multiline
+                                            rows={2}
                                             sx={{
                                                 '& .MuiOutlinedInput-root': {
                                                     backgroundColor: 'action.hover'
@@ -170,6 +187,8 @@ const obtenerFechaMaxima = () => {
                                             }}
                                         />
                                     </Grid>
+                                    
+                                    {/* Autor y Área en la misma fila pero con más espacio */}
                                     <Grid item xs={12} md={6}>
                                         <TextField
                                             fullWidth
@@ -179,6 +198,8 @@ const obtenerFechaMaxima = () => {
                                                 readOnly: true,
                                             }}
                                             variant="outlined"
+                                            multiline
+                                            rows={2}
                                             sx={{
                                                 '& .MuiOutlinedInput-root': {
                                                     backgroundColor: 'action.hover'
@@ -195,6 +216,8 @@ const obtenerFechaMaxima = () => {
                                                 readOnly: true,
                                             }}
                                             variant="outlined"
+                                            multiline
+                                            rows={2}
                                             sx={{
                                                 '& .MuiOutlinedInput-root': {
                                                     backgroundColor: 'action.hover'
@@ -202,11 +225,13 @@ const obtenerFechaMaxima = () => {
                                             }}
                                         />
                                     </Grid>
+                                    
+                                    {/* Fecha de Creación */}
                                     <Grid item xs={12} md={6}>
                                         <TextField
                                             fullWidth
                                             label="Fecha de Creación"
-                                            value={selectedItem.fecha_creacion || ''}
+                                            value={selectedItem.fechaCreacion || ''}
                                             InputProps={{
                                                 readOnly: true,
                                             }}
@@ -218,21 +243,22 @@ const obtenerFechaMaxima = () => {
                                             }}
                                         />
                                     </Grid>
+                                    
+                                    {/* Descripción - MÁS ANCHA Y MENOS ALTA */}
                                     <Grid item xs={12}>
-                                        <TextField
+                                        <DescriptionTextField
                                             fullWidth
                                             multiline
-                                            rows={3}
+                                            rows={3} // Reducido de 10 a 3 filas
                                             label="Descripción"
                                             value={selectedItem.descripcionProp || ''}
                                             InputProps={{
                                                 readOnly: true,
                                             }}
                                             variant="outlined"
-                                            sx={{
-                                                '& .MuiOutlinedInput-root': {
-                                                    backgroundColor: 'action.hover'
-                                                }
+                                            helperText="Descripción completa de la propuesta (puede hacer scroll si es necesario)"
+                                            FormHelperTextProps={{
+                                                sx: { ml: 1.5, mt: 0.5, fontSize: '0.7rem' }
                                             }}
                                         />
                                     </Grid>
@@ -355,6 +381,9 @@ const obtenerFechaMaxima = () => {
                                                                 </Box>
                                                             }
                                                             onChange={(e) => setPeriodoDesarrollo(e.target.value)}
+                                                            MenuProps={{
+                                                                style: { zIndex: 1400 }
+                                                            }}
                                                         >
                                                             <MenuItem value="">
                                                                 <em>Seleccione un período</em>
@@ -393,6 +422,9 @@ const obtenerFechaMaxima = () => {
                                                             }
                                                             onChange={(e) => setLiderManager(e.target.value)}
                                                             disabled={loadingLideres || lideresData.length === 0}
+                                                            MenuProps={{
+                                                                style: { zIndex: 1400 }
+                                                            }}
                                                         >
                                                             <MenuItem value="">
                                                                 <em>Seleccione un líder</em>
@@ -424,7 +456,7 @@ const obtenerFechaMaxima = () => {
                                                     </FormControl>
                                                 </Grid>
 
-                                                {/* Equipo Asignado - Input normal */}
+                                                {/* Equipo Asignado - TextField con multiline */}
                                                 <Grid item xs={12} md={6}>
                                                     <TextField
                                                         fullWidth
@@ -438,6 +470,8 @@ const obtenerFechaMaxima = () => {
                                                         onChange={(e) => setEquipoAsignado(e.target.value)}
                                                         placeholder="Ej: María Gómez, Carlos Ruiz"
                                                         variant="outlined"
+                                                        multiline
+                                                        rows={2}
                                                         helperText="Miembros del equipo de desarrollo"
                                                     />
                                                 </Grid>
@@ -504,6 +538,7 @@ const obtenerFechaMaxima = () => {
                                         </Box>
                                     </Grow>
                                 )}
+                                
                                 {/* Comentarios de rechazo */}
                                 {rejectChecked && (
                                     <Grow in={rejectChecked} timeout={300}>

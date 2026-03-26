@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import logo from "../assets/images/kayser_logo.webp"
+import logo from "../assets/images/kayser_logo.png"
 import Carousel from "../components/Carousel"
 import PageFooter from "../components/PageFooter"
 

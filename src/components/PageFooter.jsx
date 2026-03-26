@@ -1,4 +1,4 @@
-import logo from "../assets/images/kayser_logo.webp";
+import logo from "../assets/images/kayser_logo.png";
 
 function PageFooter() {
   return (

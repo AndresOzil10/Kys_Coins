@@ -36,7 +36,7 @@ function MenuManager({ currentScreen, setCurrentScreen }) {
           icon={<HomeIcon />} // Icono blanco
           aria-label="Navegar a sección Home"
         />
-
+        {/* Pestaña All Proposals */}
         <BottomNavigationAction
           key="All"
           label="All"
@@ -45,7 +45,7 @@ function MenuManager({ currentScreen, setCurrentScreen }) {
           aria-label="Navegar a sección Points"
         />
 
-        {/* Pestaña Points */}
+        {/* Pestaña Orders */}
         <BottomNavigationAction
           key="Orders"
           label="Orders"
@@ -54,7 +54,7 @@ function MenuManager({ currentScreen, setCurrentScreen }) {
           aria-label="Navegar a sección Points"
         />
 
-        {/* Pestaña Points */}
+        {/* Pestaña Images */}
         <BottomNavigationAction
           key="Images"
           label="Images"
