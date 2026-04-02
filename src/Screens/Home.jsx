@@ -51,6 +51,14 @@ function Home() {
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [openRows, setOpenRows] = useState({})
+  
+  // Estados para colaboradores
+  const [propuestaGrupal, setPropuestaGrupal] = useState(false)
+  const [colaboradores, setColaboradores] = useState([])
+  const [empleadosDisponibles, setEmpleadosDisponibles] = useState([])
+  const [busquedaColaborador, setBusquedaColaborador] = useState('')
+  const [errorColaboradores, setErrorColaboradores] = useState('')
+  const [mostrarSugerencias, setMostrarSugerencias] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -58,6 +66,27 @@ function Home() {
     }, 1000)
     return () => clearInterval(interval)
   }, [])
+
+  // Cargar lista de empleados disponibles
+  useEffect(() => {
+    const cargarEmpleados = async () => {
+      try {
+        const response = await enviarData(url, { aksi: "GetEmpleados" })
+        if (response.estado === "success" && response.data) {
+          // Filtrar al autor actual
+          const empleadosFiltrados = response.data.filter(emp => emp.nomina !== nomina)
+          setEmpleadosDisponibles(empleadosFiltrados)
+          console.log("Empleados disponibles:", empleadosFiltrados) // Verificar datos cargados
+        }
+      } catch (error) {
+        console.error("Error al cargar empleados:", error)
+      }
+    }
+    
+    if (nomina) {
+      cargarEmpleados()
+    }
+  }, [nomina])
 
   const RequestData = async () => {
     setLoading(true)
@@ -84,6 +113,55 @@ function Home() {
   useEffect(() => {
     RequestData()
   }, [])
+
+  // Función para añadir colaborador
+  const agregarColaborador = (empleado) => {
+    if (colaboradores.length >= 2) {
+      setErrorColaboradores('Máximo 2 colaboradores permitidos')
+      setTimeout(() => setErrorColaboradores(''), 3000)
+      return
+    }
+    
+    if (colaboradores.some(col => col.nomina === empleado.nomina)) {
+      setErrorColaboradores('Este colaborador ya fue agregado')
+      setTimeout(() => setErrorColaboradores(''), 3000)
+      return
+    }
+    
+    setColaboradores([...colaboradores, {
+      nomina: empleado.nomina,
+      nombre: empleado.nombre,
+    }])
+    setBusquedaColaborador('')
+    setMostrarSugerencias(false)
+    setErrorColaboradores('')
+  }
+
+  // Función para eliminar colaborador
+  const eliminarColaborador = (nomina) => {
+    setColaboradores(colaboradores.filter(col => col.nomina !== nomina))
+    setErrorColaboradores('')
+  }
+
+  // Filtrar empleados según búsqueda
+  const empleadosFiltrados = empleadosDisponibles.filter(emp => 
+    emp.nombre.toLowerCase().includes(busquedaColaborador.toLowerCase()) &&
+    !colaboradores.some(col => col.nomina === emp.nomina)
+  ).slice(0, 5)
+
+  // Manejar cambio del checkbox de propuesta grupal
+  const handlePropuestaGrupalChange = (e) => {
+    const esGrupal = e.target.checked
+    setPropuestaGrupal(esGrupal)
+    
+    // Si se desmarca propuesta grupal, limpiar colaboradores
+    if (!esGrupal) {
+      setColaboradores([])
+      setBusquedaColaborador('')
+      setErrorColaboradores('')
+      setMostrarSugerencias(false)
+    }
+  }
 
   function Row(props) {
     const { row } = props;
@@ -249,7 +327,7 @@ function Home() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               <div className="bg-white/50 p-3 rounded-lg border border-blue-100">
                                 <p className="text-xs text-blue-600 font-semibold mb-1">👤 LÍDER ASIGNADO</p>
-                                <p className="text-gray-800 font-medium">{row.nombre || '-'}</p>
+                                <p className="text-gray-800 font-medium">{row.lider || '-'}</p>
                               </div>
                               <div className="bg-white/50 p-3 rounded-lg border border-blue-100">
                                 <p className="text-xs text-blue-600 font-semibold mb-1">👥 EQUIPO</p>
@@ -264,6 +342,19 @@ function Home() {
                                 <p className="text-gray-800 font-medium">{row.periodo_desarrollo || '-'}</p>
                               </div>
                             </div>
+                            {/* Mostrar colaboradores si existen */}
+                            {row.colaboradores && row.colaboradores.length > 0 && (
+                              <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
+                                <p className="text-xs text-purple-600 font-semibold mb-2">👥 COLABORADORES</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {row.colaboradores.map((col, idx) => (
+                                    <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
+                                      {col.nombre}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ) : row.estatus === 'Liberada' ? (
                           <div className="flex items-start space-x-3">
@@ -319,6 +410,7 @@ function Home() {
   
   Row.propTypes = {
     row: PropTypes.shape({
+      id: PropTypes.number,
       titulo: PropTypes.string.isRequired,
       estatus: PropTypes.string.isRequired,
       lider: PropTypes.string,
@@ -326,6 +418,7 @@ function Home() {
       primera_junta: PropTypes.string,
       periodo_desarrollo: PropTypes.string,
       comentario: PropTypes.string,
+      colaboradores: PropTypes.array
     }).isRequired,
   }
 
@@ -344,14 +437,23 @@ function Home() {
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
     if (!isModalOpen) {
+      // Resetear todos los campos
       setImplementacion('')
       setTitulo('')
       setDescripcion('')
+      setPropuestaGrupal(false)
+      setColaboradores([])
+      setBusquedaColaborador('')
+      setErrorColaboradores('')
+      setMostrarSugerencias(false)
     }
   }
 
   const handleSubmit = async (e) => {  
     e.preventDefault()
+
+    //console.log("Colaboradores a enviar:", colaboradores) // Verificar colaboradores antes de enviar
+    
     const dataToSend = {
       aksi: "Insert",
       nn: nomina,
@@ -360,14 +462,28 @@ function Home() {
       areaTrabajo: area,
       areaImplementacion: implementación,
       titulo: titulo,
-      descripcion: descripcion
+      descripcion: descripcion,
+      esGrupal: propuestaGrupal,
+      colaboradores: propuestaGrupal ? colaboradores.map(col => ({
+        nomina: col.nomina,
+        nombre: col.nombre,
+        area: col.area
+      })) : []
     }
+    
     try {
       const response = await enviarData(url, dataToSend);
       if (response.estado === "success") {
+        let mensaje = response.mensaje
+        if (propuestaGrupal && colaboradores.length > 0) {
+          mensaje = `${response.mensaje} Has incluido a ${colaboradores.length} colaborador(es) en esta propuesta grupal.`
+        } else if (propuestaGrupal && colaboradores.length === 0) {
+          mensaje = `${response.mensaje} Recuerda que puedes añadir colaboradores a tu propuesta grupal.`
+        }
+        
         Swal.fire({
           title: '¡Propuesta enviada! 🎉',
-          text: response.mensaje,
+          text: mensaje,
           icon: "success",
           showConfirmButton: false,
           timer: 2000,
@@ -695,6 +811,114 @@ function Home() {
                             </span>
                           </div>
                         </div>
+
+                        {/* Checkbox de Propuesta Grupal */}
+                        <div className="form-control">
+                          <label className="label cursor-pointer justify-start gap-3">
+                            <input
+                              type="checkbox"
+                              checked={propuestaGrupal}
+                              onChange={handlePropuestaGrupalChange}
+                              className="checkbox checkbox-primary checkbox-md"
+                            />
+                            <span className="label-text font-semibold text-gray-700">
+                              🤝 Propuesta grupal
+                            </span>
+                          </label>
+                          <div className="label">
+                            <span className="label-text-alt text-[0.875rem] text-gray-500 ">
+                              (Marca esta opción si la propuesta es en equipo)
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Sección de colaboradores - Solo visible si propuestaGrupal es true */}
+                        {propuestaGrupal && (
+                          <div className="form-control">
+                            <label className="label">
+                              <span className="label-text font-semibold text-gray-700 flex items-center">
+                                <span className="mr-2">👥</span>
+                                Colaboradores (Máximo 2)
+                              </span>
+                            </label>
+                            
+                            {/* Lista de colaboradores agregados */}
+                            {colaboradores.length > 0 && (
+                              <div className="mb-3 flex flex-wrap gap-2">
+                                {colaboradores.map((col) => (
+                                  <div 
+                                    key={col.nomina} 
+                                    className="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full text-sm flex items-center gap-2"
+                                  >
+                                    <span>{col.nombre}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => eliminarColaborador(col.nomina)}
+                                      className="hover:text-red-600 transition-colors ml-1"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {/* Buscador de colaboradores */}
+                            {colaboradores.length < 2 && (
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  value={busquedaColaborador}
+                                  onChange={(e) => {
+                                    setBusquedaColaborador(e.target.value)
+                                    setMostrarSugerencias(true)
+                                  }}
+                                  onFocus={() => setMostrarSugerencias(true)}
+                                  placeholder="Buscar compañero por nombre..."
+                                  className="input input-bordered w-full focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
+                                />
+                                
+                                {/* Lista de sugerencias */}
+                                {mostrarSugerencias && busquedaColaborador && empleadosFiltrados.length > 0 && (
+                                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                    {empleadosFiltrados.map((emp) => (
+                                      <div
+                                        key={emp.nomina}
+                                        onClick={() => agregarColaborador(emp)}
+                                        className="p-3 hover:bg-indigo-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
+                                      >
+                                        <div className="font-medium text-gray-800">{emp.nombre}</div>
+                                        <div className="text-xs text-gray-500 mt-1">
+                                          📍 {emp.area || 'Área no especificada'}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                
+                                {/* Mensaje cuando no hay resultados */}
+                                {mostrarSugerencias && busquedaColaborador && empleadosFiltrados.length === 0 && empleadosDisponibles.length > 0 && (
+                                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-center text-gray-500 text-sm">
+                                    No se encontraron colaboradores con ese nombre
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            
+                            {errorColaboradores && (
+                              <div className="text-red-500 text-xs mt-1">{errorColaboradores}</div>
+                            )}
+                            
+                            <div className="label">
+                              <span className="label-text-alt text-gray-500">
+                                {colaboradores.length}/2 colaboradores agregados
+                              </span>
+                              <span className="label-text-alt text-gray-500">
+                                💡 Puedes añadir hasta 2 compañeros de equipo
+                              </span>
+                            </div>
+                          </div>
+                        )}
 
                         {/* Botones del formulario */}
                         <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">

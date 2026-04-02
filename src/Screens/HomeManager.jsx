@@ -330,7 +330,71 @@ function HomeManager() {
 
   //Editar detalles de implementacion
   const handleSaveEdit = async () => {
-    console.log('Guardando cambios para propuesta ID:', selectedId)   
+    const SaveEdit = {
+      "aksi": "EditImplementationDetails",
+      "id": selectedId,
+      "periodoDesarrollo": periodoDesarrollo,
+      "lider": liderManager,
+      "equipoAsignado": equipoAsignado,
+      "primeraJunta": primeraJunta
+    } 
+    try {
+      const respuesta = await enviarData(url, SaveEdit)
+      if (respuesta.estado === 'success') {
+        fetchData()
+        closeModal()
+        Swal.fire({
+          title: respuesta.mensaje,
+          icon: "success",
+          showConfirmButton: false,
+          timer: 2000
+        })
+      } else {
+        Swal.fire({
+          title: respuesta.mensaje,
+          icon: "error"
+        })
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudieron guardar los cambios',
+        icon: 'error'
+      })
+    }
+  }
+
+   //Rechazar Propuesta ya aceptada
+  const handleConfirmReject = async () => {
+    const RejectEdit = {
+      "aksi": "RejectApprovedProposal",
+      "id": selectedId,
+      "comentarios": comentarios
+    }
+    try {
+      const respuesta = await enviarData(url, RejectEdit)
+      if (respuesta.estado === 'success') {
+        fetchData()
+        closeModal()
+        Swal.fire({
+          title: respuesta.mensaje,
+          icon: "success",
+          showConfirmButton: false,
+          timer: 2000
+        })
+      } else {
+        Swal.fire({
+          title: respuesta.mensaje,
+          icon: "error"
+        })
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo rechazar la propuesta',
+        icon: 'error'
+      })
+    }
   }
 
   // Estados para paginación - AHORA 4 REGISTROS POR PÁGINA
@@ -971,14 +1035,13 @@ function HomeManager() {
           loading={loading}
           actionLoad={actionLoad}
           handleSaveEdit={handleSaveEdit}
-          periodoDesarrollo={periodoDesarrollo}
+          handleConfirmReject={handleConfirmReject}
           setPeriodoDesarrollo={setPeriodoDesarrollo}
-          liderManager={liderManager}
           setLiderManager={setLiderManager}
-          equipoAsignado={equipoAsignado}
           setEquipoAsignado={setEquipoAsignado}
-          primeraJunta={primeraJunta}
           setPrimeraJunta={setPrimeraJunta}
+          setComentarios={setComentarios}
+          comentarios={comentarios}
         />
       )}
     </Box>

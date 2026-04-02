@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { 
   CheckCircle, 
   Close,
@@ -41,10 +41,23 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormHelperText
 } from '@mui/material'
+
+const enviarData = async (url, data) => {
+  const resp = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  const json = await resp.json()
+  return json
+}
+
+const url = import.meta.env.VITE_API_URL
+
 import { styled } from '@mui/material/styles'
-import Swal from 'sweetalert2'
 
 // Componentes estilizados
 const SuccessCard = styled(Card)(({ theme }) => ({
@@ -117,19 +130,15 @@ function ModalAprobada({
     setPuntosAsignados, 
     handleSaveAprobada, 
     closeModal, 
-    loading, 
     actionLoading,
-    onUpdateImplementation,
-    onRejectProposal,
     handleSaveEdit, 
-    periodoDesarrollo,
     setPeriodoDesarrollo,
-    liderManager,
     setLiderManager,
-    equipoAsignado,
     setEquipoAsignado,
-    primeraJunta,
-    setPrimeraJunta
+    setPrimeraJunta,
+    handleConfirmReject,
+    comentarios,
+    setComentarios
 }) {
     const [isEditing, setIsEditing] = useState(false)
     const [editData, setEditData] = useState({
@@ -138,8 +147,35 @@ function ModalAprobada({
         equipo_asignado: '',
         primera_junta: ''
     })
+    const [lideres, setLideres] = useState([])
+    const [loadingLideres, setLoadingLideres] = useState(false)
     const [openRejectDialog, setOpenRejectDialog] = useState(false)
-    const [rejectReason, setRejectReason] = useState('')
+
+    const fetchLideres = async () => {
+        setLoadingLideres(true)
+        try {
+            const LiderManager = {
+                "aksi": "LiderManager",
+            }
+            const response = await enviarData(url, LiderManager)
+            console.log('Respuesta de líderes:', response) // Debug
+            
+            if (response.estado === "success" && response.data) {
+                setLideres(response.data)
+                console.log('Líderes cargados:', response.data)
+            } else {
+                console.error('Error al obtener líderes:', response)
+            }
+        } catch (error) {
+            console.error('Error en fetchLideres:', error)
+        } finally {
+            setLoadingLideres(false)
+        }
+    }
+
+    useEffect(() => {
+        fetchLideres()
+    }, [])
 
     const getPointsColor = (points) => {
         if (!points) return 'text.secondary'
@@ -164,40 +200,54 @@ function ModalAprobada({
 
     // Manejar clic en el botón de edición
     const handleEditClick = () => {
+        // Asegurar que los líderes están cargados
+        if (lideres.length === 0) {
+            console.log('Esperando carga de líderes...')
+            // Opcional: mostrar un mensaje o recargar líderes
+            fetchLideres().then(() => {
+                // Después de cargar, abrir edición
+                openEditMode()
+            })
+        } else {
+            openEditMode()
+        }
+    }
+
+    const openEditMode = () => {
+        const periodo = selectedItem.periodo_desarrollo || '';
+        let lider = selectedItem.lider || '';
+        const equipo = selectedItem.equipo_asignado || '';
+        const junta = selectedItem.primera_junta || '';
+        
+        // Si selectedItem.lider es un nombre, buscar su ID
+        const liderEncontrado = lideres.find(l => l.nombre === lider || l.id == lider);
+        const liderId = liderEncontrado ? liderEncontrado.id : lider;
+        
+        console.log('Abriendo edición:', {
+            liderOriginal: lider,
+            liderIdEncontrado: liderId,
+            liderEncontrado: liderEncontrado
+        });
+        
         setEditData({
-            periodo_desarrollo: selectedItem.periodo_desarrollo || '',
-            lider: selectedItem.lider || '',
-            equipo_asignado: selectedItem.equipo_asignado || '',
-            primera_junta: selectedItem.primera_junta || ''
-        })
-        setIsEditing(true)
+            periodo_desarrollo: periodo,
+            lider: liderId, // Usar el ID
+            equipo_asignado: equipo,
+            primera_junta: junta
+        });
+        
+        // Actualizar los estados del padre
+        setPeriodoDesarrollo(periodo);
+        setLiderManager(liderId); // Enviar el ID al backend
+        setEquipoAsignado(equipo);
+        setPrimeraJunta(junta);
+        
+        setIsEditing(true);
     }
     
 
     const handleRejectClick = () => {
         setOpenRejectDialog(true)
-    }
-
-    //Rechazar Propuesta ya aceptada
-    const handleConfirmReject = async () => {
-        if (!rejectReason.trim()) {
-            Swal.fire({
-                title: 'Error',
-                text: 'Por favor, ingrese una razón para el rechazo',
-                icon: 'error',
-                confirmButtonText: 'Aceptar'
-            })
-            return
-        }
-
-        if (onRejectProposal) {
-            const success = await onRejectProposal(selectedId, rejectReason)
-            if (success) {
-                setOpenRejectDialog(false)
-                setRejectReason('')
-                closeModal()
-            }
-        }
     }
 
     const formatDate = (dateString) => {
@@ -436,7 +486,10 @@ function ModalAprobada({
                                                         <Select
                                                             value={editData.periodo_desarrollo}
                                                             label="Período Desarrollo"
-                                                            onChange={(e) => setEditData({...editData, periodo_desarrollo: e.target.value})}
+                                                            onChange={(e) => {
+                                                                setEditData({...editData, periodo_desarrollo: e.target.value});
+                                                                setPeriodoDesarrollo(e.target.value); // ← Actualizar estado padre
+                                                            }}
                                                             MenuProps={{
                                                                 style: { zIndex: 1400 }
                                                             }}
@@ -454,22 +507,48 @@ function ModalAprobada({
                                                     </FormControl>
                                                 </Grid>
 
-                                                <Grid item xs={12} sm={6} md={3}>
-                                                    <TextField
-                                                        fullWidth
-                                                        label="Líder Asignado"
-                                                        value={editData.lider}
-                                                        onChange={(e) => setEditData({...editData, lider: e.target.value})}
-                                                        placeholder="Nombre del líder"
-                                                    />
+                                               <Grid item xs={12} sm={6} md={3}>
+                                                    <FormControl fullWidth>
+                                                        <InputLabel>Líder Asignado</InputLabel>
+                                                        <Select
+                                                            value={editData.lider || ''}
+                                                            label="Líder Asignado"
+                                                            onChange={(e) => {
+                                                                const selectedLiderId = e.target.value;
+                                                                setEditData({...editData, lider: selectedLiderId});
+                                                                setLiderManager(selectedLiderId); // ← Actualizar estado padre
+                                                            }}
+                                                            MenuProps={{
+                                                                style: { zIndex: 1400 }
+                                                            }}
+                                                            renderValue={(selected) => {
+                                                                // Mostrar el nombre del líder seleccionado en lugar del ID
+                                                                const selectedLider = lideres.find(l => l.id == selected);
+                                                                return selectedLider ? selectedLider.nombre : selected;
+                                                            }}
+                                                        >
+                                                            {/* Mostrar opciones de líderes */}
+                                                            {lideres && lideres.length > 0 ? (
+                                                                lideres.map((lider) => (
+                                                                    <MenuItem key={lider.id} value={lider.id}>
+                                                                        {lider.nombre} {lider.email ? `(${lider.email})` : ''}
+                                                                    </MenuItem>
+                                                                ))
+                                                            ) : (
+                                                                <MenuItem disabled>No hay líderes disponibles</MenuItem>
+                                                            )}
+                                                        </Select>
+                                                    </FormControl>
                                                 </Grid>
-
                                                 <Grid item xs={12} sm={6} md={3}>
                                                     <TextField
                                                         fullWidth
                                                         label="Equipo Asignado"
                                                         value={editData.equipo_asignado}
-                                                        onChange={(e) => setEditData({...editData, equipo_asignado: e.target.value})}
+                                                        onChange={(e) => {
+                                                            setEditData({...editData, equipo_asignado: e.target.value});
+                                                            setEquipoAsignado(e.target.value); // ← Actualizar estado padre
+                                                        }}
                                                         placeholder="Miembros del equipo"
                                                         multiline
                                                         rows={2}
@@ -482,7 +561,10 @@ function ModalAprobada({
                                                         label="Primera Junta"
                                                         type="date"
                                                         value={editData.primera_junta}
-                                                        onChange={(e) => setEditData({...editData, primera_junta: e.target.value})}
+                                                        onChange={(e) => {
+                                                            setEditData({...editData, primera_junta: e.target.value});
+                                                            setPrimeraJunta(e.target.value); // ← Actualizar estado padre
+                                                        }}
                                                         InputLabelProps={{ shrink: true }}
                                                         inputProps={{
                                                             min: obtenerFechaMinima(),
@@ -495,14 +577,27 @@ function ModalAprobada({
                                                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                                                         <Button
                                                             variant="outlined"
-                                                            onClick={() => setIsEditing(false)}
+                                                            onClick={() => {
+                                                                setIsEditing(false);
+                                                                // Restaurar valores originales si es necesario
+                                                                setEditData({
+                                                                    periodo_desarrollo: selectedItem.periodo_desarrollo || '',
+                                                                    lider: selectedItem.lider || '',
+                                                                    equipo_asignado: selectedItem.equipo_asignado || '',
+                                                                    primera_junta: selectedItem.primera_junta || ''
+                                                                });
+                                                            }}
                                                             sx={{ borderRadius: 2 }}
                                                         >
                                                             Cancelar
                                                         </Button>
                                                         <Button
                                                             variant="contained"
-                                                            onClick={handleSaveEdit}
+                                                            onClick={() => {
+                                                                // Guardar cambios y salir del modo edición
+                                                                handleSaveEdit();
+                                                                setIsEditing(false);
+                                                            }}
                                                             startIcon={<Save />}
                                                             sx={{
                                                                 borderRadius: 2,
@@ -821,7 +916,7 @@ function ModalAprobada({
 
             {/* Diálogo de rechazo */}
             <Dialog 
-                open={openRejectDialog} 
+                open={  openRejectDialog} 
                 onClose={() => setOpenRejectDialog(false)}
                 maxWidth="sm"
                 fullWidth
@@ -857,8 +952,8 @@ function ModalAprobada({
                         multiline
                         rows={4}
                         label="Razón del rechazo"
-                        value={rejectReason}
-                        onChange={(e) => setRejectReason(e.target.value)}
+                        value={comentarios}
+                        onChange={(e) => setComentarios(e.target.value)}
                         placeholder="Describa detalladamente las razones por las cuales se rechaza esta propuesta..."
                         variant="outlined"
                         required

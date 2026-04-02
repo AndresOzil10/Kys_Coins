@@ -398,16 +398,12 @@ const filteredOrders = orders.filter(order => {
                           height: 60 
                         }}>
                           <Typography component="div" variant="h4" fontWeight="bold" color="primary">
-                            150,000pts
+                            {order.puntosGastados.toLocaleString()}
                           </Typography>
                           <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
                             pts
                           </Typography>
                         </Box>
-                        
-                        <Typography component="div" variant="caption" color="text.secondary" display="block" gutterBottom>
-                          Valor: $1,500.00
-                        </Typography>
                       </Paper>
                     </Grid>
 

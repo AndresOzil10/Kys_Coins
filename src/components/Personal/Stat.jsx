@@ -49,25 +49,27 @@ function Stat() {
     setError(null);
     
     try {
-      // Hacer todas las llamadas en paralelo
-      const [actualRes, nearingRes, lostRes] = await Promise.all([
-        enviarData(url, { aksi: "GetPointsStat", nn: nomina }),
-        enviarData(url, { aksi: "GetPointsStatN", nn: nomina }),
-        enviarData(url, { aksi: "GetPointsStatL", nn: nomina })
-      ]);
-
-      const actualPoints = actualRes.data || 0;
-      const nearingPoints = nearingRes.data || 0;
-      const lostPoints = lostRes.data || 0;
-
-      setPoints({
-        actual: actualPoints,
-        nearing: nearingPoints,
-        lost: lostPoints
+      // Una sola llamada a la API
+      const response = await enviarData(url, { 
+        aksi: "GetAllPointsStats", 
+        nn: nomina 
       });
 
-      // Calcular puntos totales (actual + próximos a vencer)
-      setTotalPoints(actualPoints + nearingPoints);
+      if (response.estado === 'success' && response.data) {
+        const actualPoints = response.data.actual || 0;
+        const nearingPoints = response.data.nearing || 0;
+        const lostPoints = response.data.lost || 0;
+
+        setPoints({
+          actual: actualPoints,
+          nearing: nearingPoints,
+          lost: lostPoints
+        });
+
+        setTotalPoints(actualPoints - lostPoints);
+      } else {
+        throw new Error(response.mensaje || 'Error al cargar datos');
+      }
 
     } catch (error) {
       console.error('Error fetching points data:', error);

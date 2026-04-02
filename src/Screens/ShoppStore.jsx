@@ -119,14 +119,6 @@ const ShoppStore = () => {
     setModalPay(!ModalPay)
   }
 
-  // const handleImageLoad = (itemId) => {
-  //   setLoadedImages(prev => new Set([...prev, itemId]))
-  // }
-
-  // const handleImageError = (itemId) => {
-  //   setLoadedImages(prev => new Set([...prev, itemId]))
-  // }
-
   const openTooltip = () => {
     setIsTooltipOpen(true)
   }
