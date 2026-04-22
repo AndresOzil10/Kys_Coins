@@ -5,9 +5,9 @@ import {Card,CardContent,CardMedia,Typography,Button,IconButton,Badge,Chip,TextF
   InputAdornment,Box,CircularProgress,Alert,Grid,Slide,Dialog,DialogContent,DialogTitle,
   DialogActions,Tooltip,Avatar,List,ListItem,ListItemAvatar,ListItemText,Divider
 } from '@mui/material';
-import {ShoppingCart as CartIcon,Search as SearchIcon, Add as AddIcon, Remove as RemoveIcon, 
-  Delete as DeleteIcon,Close as CloseIcon,ArrowBack as ArrowBackIcon, LocalMall as StoreIcon, 
-  Star as StarIcon, Category as CategoryIcon,CurrencyExchange as PointsIcon, Verified as VerifiedIcon,
+import {ShoppingCart as CartIcon, Search as SearchIcon, Add as AddIcon, Remove as RemoveIcon, 
+  Delete as DeleteIcon, Close as CloseIcon, ArrowBack as ArrowBackIcon, LocalMall as StoreIcon, 
+  Star as StarIcon, Category as CategoryIcon, CurrencyExchange as PointsIcon, Verified as VerifiedIcon,
   AddShoppingCart as AddCartIcon, ShoppingBag as BagIcon, Redeem as GiftIcon 
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -74,35 +74,32 @@ const ShoppStore = () => {
     }
   }
 
-  // Agregar al carrito con cantidad
+  // Agregar al carrito - AHORA PERMITE DUPLICADOS
   const addToCart = (item) => {
     setCart(prevCart => {
-      const existingItem = prevCart.find(cartItem => cartItem.id === item.id)
-      if (existingItem) {
-        return prevCart.map(cartItem =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
-        )
-      } else {
-        return [...prevCart, { ...item, quantity: 1 }]
+      // Crear un nuevo item con un ID único basado en timestamp y random
+      const newItem = { 
+        ...item, 
+        quantity: 1,
+        cartId: `${item.id}_${Date.now()}_${Math.random()}_${Math.random()}` // ID único para cada instancia
       }
+      return [...prevCart, newItem]
     })
   }
 
-  // Eliminar del carrito
-  const removeFromCart = (itemId) => {
-    setCart(cart.filter(item => item.id !== itemId))
+  // Eliminar del carrito usando cartId
+  const removeFromCart = (cartId) => {
+    setCart(cart.filter(item => item.cartId !== cartId))
   }
 
-  // Actualizar cantidad en carrito
-  const updateQuantity = (itemId, newQuantity) => {
+  // Actualizar cantidad en carrito usando cartId
+  const updateQuantity = (cartId, newQuantity) => {
     if (newQuantity < 1) {
-      removeFromCart(itemId)
+      removeFromCart(cartId)
       return
     }
     setCart(cart.map(item =>
-      item.id === itemId ? { ...item, quantity: newQuantity } : item
+      item.cartId === cartId ? { ...item, quantity: newQuantity } : item
     ))
   }
 
@@ -183,8 +180,10 @@ const ShoppStore = () => {
     return colors[category] || '#6B7280'
   }
 
+  // Modificar cartSummary para incluir cartId y mantener todos los items
   const cartSummary = cart.map(item => ({
     id: item.id,
+    cartId: item.cartId,
     nombre: item.nombre,
     quantity: item.quantity,
     puntos: item.puntos,
@@ -331,7 +330,7 @@ const ShoppStore = () => {
         </Card>
       </motion.div>
 
-      {/* Banner de advertencia - AGREGAR AQUÍ */}
+      {/* Banner de advertencia */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -666,10 +665,10 @@ const ShoppStore = () => {
                 <>
                   <List sx={{ maxHeight: 250, overflow: 'auto' }}>
                     {cart.map((item) => (
-                      <React.Fragment key={item.id}>
+                      <React.Fragment key={item.cartId}>
                         <ListItem
                           secondaryAction={
-                            <IconButton edge="end" onClick={() => removeFromCart(item.id)}>
+                            <IconButton edge="end" onClick={() => removeFromCart(item.cartId)}>
                               <DeleteIcon />
                             </IconButton>
                           }
@@ -699,7 +698,7 @@ const ShoppStore = () => {
                                 <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                   <IconButton 
                                     size="small" 
-                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                    onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
                                     sx={{ p: 0.5 }}
                                   >
                                     <RemoveIcon fontSize="small" />
@@ -713,7 +712,7 @@ const ShoppStore = () => {
                                   </Box>
                                   <IconButton 
                                     size="small" 
-                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                    onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
                                     sx={{ p: 0.5 }}
                                   >
                                     <AddIcon fontSize="small" />
@@ -806,7 +805,7 @@ const ShoppStore = () => {
             <Box sx={{ p: 3 }}>
               <List>
                 {cart.map((item) => (
-                  <Card key={item.id} sx={{ mb: 2 }}>
+                  <Card key={item.cartId} sx={{ mb: 2 }}>
                     <CardContent>
                       <Grid container spacing={2} alignItems="center">
                         <Grid item xs={2}>
@@ -832,11 +831,11 @@ const ShoppStore = () => {
                         
                         <Grid item xs={2}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <IconButton size="small" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                            <IconButton size="small" onClick={() => updateQuantity(item.cartId, item.quantity - 1)}>
                               <RemoveIcon />
                             </IconButton>
                             <Typography>{item.quantity}</Typography>
-                            <IconButton size="small" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                            <IconButton size="small" onClick={() => updateQuantity(item.cartId, item.quantity + 1)}>
                               <AddIcon />
                             </IconButton>
                           </Box>
@@ -847,7 +846,7 @@ const ShoppStore = () => {
                             <Typography variant="h6" color="primary" fontWeight="bold">
                               {item.puntos * item.quantity} pts
                             </Typography>
-                            <IconButton size="small" onClick={() => removeFromCart(item.id)} color="error">
+                            <IconButton size="small" onClick={() => removeFromCart(item.cartId)} color="error">
                               <DeleteIcon />
                             </IconButton>
                           </Box>

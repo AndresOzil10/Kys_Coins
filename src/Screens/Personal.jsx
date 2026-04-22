@@ -31,49 +31,47 @@ const Personal = () => {
   const [error, setError] = useState("") // Para mostrar errores en UI
   const navigate = useNavigate()
   const [CustomAlertVisible, setCustomAlertVisible] = useState(false)
-    const [customAlertMessage, setCustomAlertMessage] = useState('')
+  const [customAlertMessage, setCustomAlertMessage] = useState('')
 
   const handleSubmit = async (e) => {
-    e.preventDefault() // ¡Clave! Previene el submit por defecto del form (recarga de página)
+    e.preventDefault()
     
-    // Validación básica
     const nomina = username.trim()
     if (!nomina || nomina.length < 4 || isNaN(nomina)) {
       setError("Ingresa un número de nómina válido (al menos 4 dígitos).")
       return;
     }
-    
-    setError("") // Limpia errores previos
+
+    setError("")
     setLoading(true)
 
-    const loginData = { aksi: "login", username: nomina }
-    // console.log("Enviando datos:", loginData); // Debug: Verifica en consola
+    // Determinar el tipo de login basado en la longitud
+    const aksi = nomina.length === 10 ? "loginT" : "login"
+    const loginData = { aksi, username: nomina }
 
     try {
       const response = await enviarData(API_URL, loginData)
-    //   console.log("Respuesta de API:", response); // Debug: Verifica la respuesta
 
       if (response.estado === "success") {
-        console.log("Login exitoso, navegando...") // Debug
+        console.log("Login exitoso, navegando...")
         navigate("/personal", { 
           replace: true, 
           state: { 
-            nombre: response.data, // Ajusta según estructura real de response.data
-            nomina: nomina,
-            area : response.area
+            nombre: response.data,
+            nomina: nomina.length === 10 ? response.nomina : nomina, // Ajuste si es necesario
+            area: response.area
           } 
         })
       } else {
         setCustomAlertVisible(true)
         setCustomAlertMessage(response.mensaje)
         setTimeout(() => {
-            setCustomAlertVisible(false)
-            setCustomAlertMessage('')
+          setCustomAlertVisible(false)
+          setCustomAlertMessage('')
         }, 4000)
       }
     } catch (error) {
       setError("Error de conexión. Intenta de nuevo más tarde.")
-    //   console.error("Error during API call:", error);
     } finally {
       setLoading(false)
     }
