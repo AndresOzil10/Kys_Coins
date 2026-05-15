@@ -13,7 +13,9 @@ import {
   ArrowBack,
   Edit,
   Cancel,
-  Delete
+  Delete,
+  GroupAdd,
+  PersonAdd
 } from '@mui/icons-material'
 import {
   Box,
@@ -40,7 +42,7 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem,
+  MenuItem
 } from '@mui/material'
 
 const enviarData = async (url, data) => {
@@ -123,6 +125,23 @@ const DescriptionTextField = styled(TextField)(({ theme }) => ({
   }
 }))
 
+// Componente para mostrar el tipo de colaboración
+const ColaboracionCard = styled(Paper)(({ theme, colaboracion }) => ({
+  padding: theme.spacing(2),
+  borderRadius: theme.spacing(2),
+  background: colaboracion === 'Sí' 
+    ? 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)'
+    : 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)',
+  border: colaboracion === 'Sí'
+    ? '1px solid #7dd3fc'
+    : '1px solid #d8b4fe',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: theme.shadows[3]
+  }
+}))
+
 function ModalAprobada({ 
     selectedId, 
     selectedItem, 
@@ -151,6 +170,9 @@ function ModalAprobada({
     const [loadingLideres, setLoadingLideres] = useState(false)
     const [openRejectDialog, setOpenRejectDialog] = useState(false)
 
+    // Estado para los integrantes (solo lectura)
+    const [nombresIntegrantes, setNombresIntegrantes] = useState('')
+
     const fetchLideres = async () => {
         setLoadingLideres(true)
         try {
@@ -158,7 +180,7 @@ function ModalAprobada({
                 "aksi": "LiderManager",
             }
             const response = await enviarData(url, LiderManager)
-            console.log('Respuesta de líderes:', response) // Debug
+            console.log('Respuesta de líderes:', response)
             
             if (response.estado === "success" && response.data) {
                 setLideres(response.data)
@@ -175,7 +197,31 @@ function ModalAprobada({
 
     useEffect(() => {
         fetchLideres()
-    }, [])
+        
+        // Inicializar estado de integrantes con datos existentes
+        if (selectedItem) {
+            setNombresIntegrantes(selectedItem.integrantes_grupo || '')
+        }
+    }, [selectedItem])
+
+    // Efecto para sincronizar editData cuando selectedItem cambia
+    useEffect(() => {
+        if (selectedItem && lideres.length > 0 && !isEditing) {
+            // Buscar el ID del líder si el nombre está guardado
+            let liderId = selectedItem.lider || ''
+            const liderEncontrado = lideres.find(l => l.nombre === liderId || l.id == liderId)
+            if (liderEncontrado) {
+                liderId = liderEncontrado.id
+            }
+            
+            setEditData({
+                periodo_desarrollo: selectedItem.periodo_desarrollo || '',
+                lider: liderId,
+                equipo_asignado: selectedItem.equipo_asignado || '',
+                primera_junta: selectedItem.primera_junta || ''
+            })
+        }
+    }, [selectedItem, lideres, isEditing])
 
     const getPointsColor = (points) => {
         if (!points) return 'text.secondary'
@@ -200,12 +246,9 @@ function ModalAprobada({
 
     // Manejar clic en el botón de edición
     const handleEditClick = () => {
-        // Asegurar que los líderes están cargados
         if (lideres.length === 0) {
             console.log('Esperando carga de líderes...')
-            // Opcional: mostrar un mensaje o recargar líderes
             fetchLideres().then(() => {
-                // Después de cargar, abrir edición
                 openEditMode()
             })
         } else {
@@ -214,38 +257,59 @@ function ModalAprobada({
     }
 
     const openEditMode = () => {
+        // Obtener los valores actuales de selectedItem
         const periodo = selectedItem.periodo_desarrollo || '';
         let lider = selectedItem.lider || '';
         const equipo = selectedItem.equipo_asignado || '';
         const junta = selectedItem.primera_junta || '';
         
-        // Si selectedItem.lider es un nombre, buscar su ID
+        // Buscar el ID del líder si el nombre está guardado
         const liderEncontrado = lideres.find(l => l.nombre === lider || l.id == lider);
         const liderId = liderEncontrado ? liderEncontrado.id : lider;
         
-        console.log('Abriendo edición:', {
+        console.log('Abriendo edición con valores actuales:', {
+            periodo,
             liderOriginal: lider,
-            liderIdEncontrado: liderId,
-            liderEncontrado: liderEncontrado
+            liderId,
+            equipo,
+            junta
         });
         
         setEditData({
             periodo_desarrollo: periodo,
-            lider: liderId, // Usar el ID
+            lider: liderId,
             equipo_asignado: equipo,
             primera_junta: junta
         });
         
-        // Actualizar los estados del padre
+        // Actualizar los estados padre con los valores actuales
         setPeriodoDesarrollo(periodo);
-        setLiderManager(liderId); // Enviar el ID al backend
+        setLiderManager(liderId);
         setEquipoAsignado(equipo);
         setPrimeraJunta(junta);
         
         setIsEditing(true);
     }
     
-
+    const handleCancelEdit = () => {
+        // Restaurar los valores originales de selectedItem
+        let liderId = selectedItem.lider || ''
+        const liderEncontrado = lideres.find(l => l.nombre === liderId || l.id == liderId)
+        if (liderEncontrado) {
+            liderId = liderEncontrado.id
+        }
+        
+        setEditData({
+            periodo_desarrollo: selectedItem.periodo_desarrollo || '',
+            lider: liderId,
+            equipo_asignado: selectedItem.equipo_asignado || '',
+            primera_junta: selectedItem.primera_junta || ''
+        })
+        
+        setNombresIntegrantes(selectedItem.integrantes_grupo || '')
+        setIsEditing(false)
+    }
+    
     const handleRejectClick = () => {
         setOpenRejectDialog(true)
     }
@@ -262,6 +326,32 @@ function ModalAprobada({
             return dateString
         }
     }
+
+    // Función para obtener el texto y color según el tipo de colaboración (Sí/No)
+    const getColaboracionInfo = (colaboracion) => {
+        if (colaboracion === 'Sí') {
+            return {
+                texto: 'Propuesta Grupal',
+                icono: <Groups sx={{ fontSize: 28 }} />,
+                color: '#0284c7',
+                bgGradient: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
+                descripcion: 'Trabajo colaborativo entre múltiples personas',
+                chipLabel: 'Equipo'
+            }
+        } else {
+            return {
+                texto: 'Propuesta Individual',
+                icono: <Person sx={{ fontSize: 28 }} />,
+                color: '#7e22ce',
+                bgGradient: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)',
+                descripcion: 'Iniciativa desarrollada de manera personal',
+                chipLabel: 'Individual'
+            }
+        }
+    }
+
+    const colaboracionInfo = getColaboracionInfo(selectedItem?.colaboracion)
+    const esGrupal = selectedItem?.colaboracion === 'Sí'
 
     return (
         <>
@@ -282,7 +372,7 @@ function ModalAprobada({
                 <Fade in={true} timeout={400}>
                     <SuccessCard sx={{
                         width: '100%',
-                        maxWidth: 1600, // Aumentado de 1400 a 1600 para más espacio horizontal
+                        maxWidth: 1600,
                         maxHeight: '90vh',
                         overflow: 'hidden'
                     }}>
@@ -435,6 +525,68 @@ function ModalAprobada({
                                                 }}
                                             />
                                         </Grid>
+
+                                        {/* Tarjeta de Tipo de Colaboración */}
+                                        <Grid item xs={12} md={esGrupal ? 6 : 12}>
+                                            <ColaboracionCard colaboracion={selectedItem.colaboracion}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                    <Avatar sx={{ 
+                                                        bgcolor: colaboracionInfo.color,
+                                                        width: 56,
+                                                        height: 56
+                                                    }}>
+                                                        {colaboracionInfo.icono}
+                                                    </Avatar>
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <Typography variant="h6" fontWeight="bold" sx={{ color: colaboracionInfo.color }}>
+                                                            {colaboracionInfo.texto}
+                                                        </Typography>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            {colaboracionInfo.descripcion}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Chip 
+                                                        label={colaboracionInfo.chipLabel}
+                                                        size="small"
+                                                        sx={{
+                                                            backgroundColor: colaboracionInfo.color,
+                                                            color: 'white',
+                                                            fontWeight: 600
+                                                        }}
+                                                    />
+                                                </Box>
+                                            </ColaboracionCard>
+                                        </Grid>
+
+                                        {/* Campo de Integrantes (solo si colaboracion es "Sí") */}
+                                        {esGrupal && (
+                                            <Grid item xs={12} md={6}>
+                                                <TextField
+                                                    fullWidth
+                                                    multiline
+                                                    rows={3}
+                                                    label={
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                            <GroupAdd fontSize="small" />
+                                                            <Typography variant="subtitle2" fontWeight="600">
+                                                                Integrantes del Grupo
+                                                            </Typography>
+                                                        </Box>
+                                                    }
+                                                    value={nombresIntegrantes}
+                                                    onChange={(e) => setNombresIntegrantes(e.target.value)}
+                                                    placeholder="Lista de integrantes del grupo"
+                                                    disabled={!isEditing}
+                                                    helperText={!isEditing ? "Para editar, presione el botón 'Editar' en la sección Plan de Implementación" : "Liste los nombres completos de todos los integrantes"}
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-root': {
+                                                            backgroundColor: 'rgba(240, 253, 244, 0.5)',
+                                                            borderRadius: 2
+                                                        }
+                                                    }}
+                                                />
+                                            </Grid>
+                                        )}
                                     </Grid>
 
                                     {/* Detalles de implementación con botón de edición */}
@@ -459,7 +611,7 @@ function ModalAprobada({
                                             {!isEditing && (
                                                 <Button
                                                     variant="outlined"
-                                                    size="small"
+                                                    size="medium"
                                                     startIcon={<Edit />}
                                                     onClick={handleEditClick}
                                                     sx={{
@@ -467,31 +619,40 @@ function ModalAprobada({
                                                         textTransform: 'none',
                                                         borderColor: '#10B981',
                                                         color: '#10B981',
+                                                        px: 3,
                                                         '&:hover': {
                                                             borderColor: '#059669',
                                                             backgroundColor: 'rgba(16, 185, 129, 0.04)'
                                                         }
                                                     }}
                                                 >
-                                                    Editar
+                                                    Editar Plan
                                                 </Button>
                                             )}
                                         </Box>
 
                                         {isEditing ? (
-                                            <Grid container spacing={3}>
-                                                <Grid item xs={12} sm={6} md={3}>
-                                                    <FormControl fullWidth>
-                                                        <InputLabel>Período Desarrollo</InputLabel>
+                                            <Paper sx={{ p: 3, borderRadius: 3, backgroundColor: '#f9fafb' }}>
+                                                <Stack spacing={3}>
+                                                    {/* Período Desarrollo */}
+                                                    <FormControl fullWidth size="medium">
+                                                        <InputLabel id="periodo-label">Período Desarrollo</InputLabel>
                                                         <Select
-                                                            value={editData.periodo_desarrollo}
+                                                            labelId="periodo-label"
+                                                            value={editData.periodo_desarrollo || ''}
                                                             label="Período Desarrollo"
                                                             onChange={(e) => {
                                                                 setEditData({...editData, periodo_desarrollo: e.target.value});
-                                                                setPeriodoDesarrollo(e.target.value); // ← Actualizar estado padre
+                                                                setPeriodoDesarrollo(e.target.value);
                                                             }}
                                                             MenuProps={{
                                                                 style: { zIndex: 1400 }
+                                                            }}
+                                                            sx={{
+                                                                '& .MuiSelect-select': {
+                                                                    py: 1.5,
+                                                                    fontSize: '1rem'
+                                                                }
                                                             }}
                                                         >
                                                             <MenuItem value="Corto plazo (1-3 meses)">
@@ -505,29 +666,33 @@ function ModalAprobada({
                                                             </MenuItem>
                                                         </Select>
                                                     </FormControl>
-                                                </Grid>
 
-                                               <Grid item xs={12} sm={6} md={3}>
-                                                    <FormControl fullWidth>
-                                                        <InputLabel>Líder Asignado</InputLabel>
+                                                    {/* Líder Asignado */}
+                                                    <FormControl fullWidth size="medium">
+                                                        <InputLabel id="lider-label">Líder Asignado</InputLabel>
                                                         <Select
+                                                            labelId="lider-label"
                                                             value={editData.lider || ''}
                                                             label="Líder Asignado"
                                                             onChange={(e) => {
                                                                 const selectedLiderId = e.target.value;
                                                                 setEditData({...editData, lider: selectedLiderId});
-                                                                setLiderManager(selectedLiderId); // ← Actualizar estado padre
+                                                                setLiderManager(selectedLiderId);
                                                             }}
                                                             MenuProps={{
                                                                 style: { zIndex: 1400 }
                                                             }}
                                                             renderValue={(selected) => {
-                                                                // Mostrar el nombre del líder seleccionado en lugar del ID
                                                                 const selectedLider = lideres.find(l => l.id == selected);
                                                                 return selectedLider ? selectedLider.nombre : selected;
                                                             }}
+                                                            sx={{
+                                                                '& .MuiSelect-select': {
+                                                                    py: 1.5,
+                                                                    fontSize: '1rem'
+                                                                }
+                                                            }}
                                                         >
-                                                            {/* Mostrar opciones de líderes */}
                                                             {lideres && lideres.length > 0 ? (
                                                                 lideres.map((lider) => (
                                                                     <MenuItem key={lider.id} value={lider.id}>
@@ -539,76 +704,81 @@ function ModalAprobada({
                                                             )}
                                                         </Select>
                                                     </FormControl>
-                                                </Grid>
-                                                <Grid item xs={12} sm={6} md={3}>
+
+                                                    {/* Equipo Asignado */}
                                                     <TextField
                                                         fullWidth
                                                         label="Equipo Asignado"
-                                                        value={editData.equipo_asignado}
+                                                        value={editData.equipo_asignado || ''}
                                                         onChange={(e) => {
                                                             setEditData({...editData, equipo_asignado: e.target.value});
-                                                            setEquipoAsignado(e.target.value); // ← Actualizar estado padre
+                                                            setEquipoAsignado(e.target.value);
                                                         }}
                                                         placeholder="Miembros del equipo"
                                                         multiline
-                                                        rows={2}
+                                                        rows={4}
+                                                        size="medium"
+                                                        sx={{
+                                                            '& .MuiOutlinedInput-root': {
+                                                                fontSize: '1rem'
+                                                            }
+                                                        }}
                                                     />
-                                                </Grid>
 
-                                                <Grid item xs={12} sm={6} md={3}>
+                                                    {/* Primera Junta */}
                                                     <TextField
                                                         fullWidth
                                                         label="Primera Junta"
                                                         type="date"
-                                                        value={editData.primera_junta}
+                                                        value={editData.primera_junta || ''}
                                                         onChange={(e) => {
                                                             setEditData({...editData, primera_junta: e.target.value});
-                                                            setPrimeraJunta(e.target.value); // ← Actualizar estado padre
+                                                            setPrimeraJunta(e.target.value);
                                                         }}
                                                         InputLabelProps={{ shrink: true }}
                                                         inputProps={{
                                                             min: obtenerFechaMinima(),
                                                             max: obtenerFechaMaxima()
                                                         }}
+                                                        size="medium"
+                                                        sx={{
+                                                            '& .MuiOutlinedInput-root': {
+                                                                fontSize: '1rem'
+                                                            }
+                                                        }}
                                                     />
-                                                </Grid>
 
-                                                <Grid item xs={12}>
-                                                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                                                    {/* Botones de acción */}
+                                                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
                                                         <Button
                                                             variant="outlined"
-                                                            onClick={() => {
-                                                                setIsEditing(false);
-                                                                // Restaurar valores originales si es necesario
-                                                                setEditData({
-                                                                    periodo_desarrollo: selectedItem.periodo_desarrollo || '',
-                                                                    lider: selectedItem.lider || '',
-                                                                    equipo_asignado: selectedItem.equipo_asignado || '',
-                                                                    primera_junta: selectedItem.primera_junta || ''
-                                                                });
-                                                            }}
-                                                            sx={{ borderRadius: 2 }}
+                                                            onClick={handleCancelEdit}
+                                                            sx={{ borderRadius: 2, px: 4, py: 1 }}
                                                         >
                                                             Cancelar
                                                         </Button>
                                                         <Button
                                                             variant="contained"
                                                             onClick={() => {
-                                                                // Guardar cambios y salir del modo edición
                                                                 handleSaveEdit();
                                                                 setIsEditing(false);
                                                             }}
                                                             startIcon={<Save />}
                                                             sx={{
                                                                 borderRadius: 2,
-                                                                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                                                                px: 4,
+                                                                py: 1,
+                                                                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                                                                '&:hover': {
+                                                                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                                                                }
                                                             }}
                                                         >
                                                             Guardar Cambios
                                                         </Button>
                                                     </Box>
-                                                </Grid>
-                                            </Grid>
+                                                </Stack>
+                                            </Paper>
                                         ) : (
                                             <Grid container spacing={3}>
                                                 <Grid item xs={12} sm={6} md={3}>
@@ -916,7 +1086,7 @@ function ModalAprobada({
 
             {/* Diálogo de rechazo */}
             <Dialog 
-                open={  openRejectDialog} 
+                open={openRejectDialog} 
                 onClose={() => setOpenRejectDialog(false)}
                 maxWidth="sm"
                 fullWidth
