@@ -17,6 +17,8 @@ import { useLocation } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import Collapse from '@mui/material/Collapse'
 import Fade from '@mui/material/Fade'
+import GroupIcon from '@mui/icons-material/Group'
+import PersonIcon from '@mui/icons-material/Person'
 
 const url = import.meta.env.VITE_API_URL
 
@@ -166,6 +168,14 @@ function Home() {
   function Row(props) {
     const { row } = props;
     const open = openRows[row.id] || false;
+    
+    // Determinar si es propuesta grupal basado en colaboracion
+    const esGrupal = row.colaboracion === "Sí";
+    
+    // Obtener colaboradores formateados
+    const colaboradoresLista = row.colaboradores && row.colaboradores.length > 0 
+      ? row.colaboradores.map(col => col.nombre || col.nombre_completo || col.nn_colaborador).join(', ')
+      : 'Sin colaboradores registrados';
 
     const handleToggle = () => {
       setOpenRows(prev => ({
@@ -241,10 +251,34 @@ function Home() {
             </div>
           </TableCell>
           <TableCell align="right">
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(row.estatus)} transition-all duration-300 hover:scale-105`}>
-              <span className="mr-2">{getStatusIcon(row.estatus)}</span>
-              {row.estatus}
-            </span>
+            <div className="flex items-center justify-end space-x-3">
+              {/* Badge de tipo de propuesta */}
+              <Tooltip title={esGrupal ? "Propuesta en grupo" : "Propuesta individual"} arrow>
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium transition-all duration-300 hover:scale-105 ${
+                  esGrupal 
+                    ? 'bg-purple-100 text-purple-700 border border-purple-200' 
+                    : 'bg-blue-100 text-blue-700 border border-blue-200'
+                }`}>
+                  {esGrupal ? (
+                    <>
+                      <GroupIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                      Grupal
+                    </>
+                  ) : (
+                    <>
+                      <PersonIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                      Individual
+                    </>
+                  )}
+                </span>
+              </Tooltip>
+              
+              {/* Badge de estatus */}
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(row.estatus)} transition-all duration-300 hover:scale-105`}>
+                <span className="mr-2">{getStatusIcon(row.estatus)}</span>
+                {row.estatus}
+              </span>
+            </div>
           </TableCell>
         </TableRow>
         
@@ -272,7 +306,6 @@ function Home() {
                   overflow: 'hidden'
                 }}
               >
-                {/* Efecto de fondo */}
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 opacity-60"></div>
                 
                 <div className="relative z-10">
@@ -286,20 +319,32 @@ function Home() {
                         fontWeight: '700',
                         display: 'flex',
                         alignItems: 'center',
+                        justifyContent: 'space-between',
                         gap: 1
                       }}
                       className="mb-4"
                     >
-                      <span className="text-2xl">
-                        {row.estatus === 'En Revision' ? '⏳' : 
-                         row.estatus === 'En Proceso' ? '✅' : 
-                         row.estatus === 'Liberada' ? '🎉' : 
-                         row.estatus === 'Rechazada' ? '❌' : '📋'}
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">
+                          {row.estatus === 'En Revision' ? '⏳' : 
+                           row.estatus === 'En Proceso' ? '✅' : 
+                           row.estatus === 'Liberada' ? '🎉' : 
+                           row.estatus === 'Rechazada' ? '❌' : '📋'}
+                        </span>
+                        {row.estatus === 'En Revision' ? 'En Revisión' : 
+                         row.estatus === 'En Proceso' ? 'Detalles de Aprobación' : 
+                         row.estatus === 'Liberada' ? '¡Propuesta Implementada!' : 
+                         row.estatus === 'Rechazada' ? 'Comentarios del Revisor' : null}
+                      </div>
+                      
+                      {/* Badge de tipo en el detalle también */}
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        esGrupal 
+                          ? 'bg-purple-100 text-purple-700' 
+                          : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {esGrupal ? '👥 Propuesta Grupal' : '👤 Propuesta Individual'}
                       </span>
-                      {row.estatus === 'En Revision' ? 'En Revisión' : 
-                       row.estatus === 'En Proceso' ? 'Detalles de Aprobación' : 
-                       row.estatus === 'Liberada' ? '¡Propuesta Implementada!' : 
-                       row.estatus === 'Rechazada' ? 'Comentarios del Revisor' : null}
                     </Typography>
                     
                     <div className="space-y-3">
@@ -342,17 +387,25 @@ function Home() {
                                 <p className="text-gray-800 font-medium">{row.periodo_desarrollo || '-'}</p>
                               </div>
                             </div>
-                            {/* Mostrar colaboradores si existen */}
-                            {row.colaboradores && row.colaboradores.length > 0 && (
+                            
+                            {/* Mostrar colaboradores si es grupal */}
+                            {esGrupal && row.colaboradores && row.colaboradores.length > 0 && (
                               <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
                                 <p className="text-xs text-purple-600 font-semibold mb-2">👥 COLABORADORES</p>
                                 <div className="flex flex-wrap gap-2">
                                   {row.colaboradores.map((col, idx) => (
                                     <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
-                                      {col.nombre}
+                                      {col.nombre_completo || col.nombre || col.nn_colaborador}
                                     </span>
                                   ))}
                                 </div>
+                              </div>
+                            )}
+                            
+                            {/* Mensaje si es grupal sin colaboradores */}
+                            {esGrupal && (!row.colaboradores || row.colaboradores.length === 0) && (
+                              <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <p className="text-xs text-gray-500">No hay colaboradores registrados para esta propuesta grupal</p>
                               </div>
                             )}
                           </div>
@@ -418,6 +471,7 @@ function Home() {
       primera_junta: PropTypes.string,
       periodo_desarrollo: PropTypes.string,
       comentario: PropTypes.string,
+      colaboracion: PropTypes.string,
       colaboradores: PropTypes.array
     }).isRequired,
   }
@@ -573,7 +627,7 @@ function Home() {
                       <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', fontSize: '0.95rem', py: 2 }}>
                         <div className="flex items-center justify-end">
                           <span className="mr-2">📊</span>
-                          Estatus
+                          Estado
                         </div>
                       </TableCell>
                     </TableRow>

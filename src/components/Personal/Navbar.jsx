@@ -31,7 +31,7 @@ const Barnav = ({nomina, nombre}) => {
         sessionStorage.clear();
         localStorage.clear();
         // Redirect to login and prevent back navigation
-        window.location.replace("/KysPoints");
+        window.location.replace("/KysPoints/");
     }
 
     const getPoints = async () => {

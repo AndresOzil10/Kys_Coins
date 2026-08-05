@@ -150,68 +150,97 @@ function UpdateImages() {
   }
 
   const handleAddImage = async () => {
+    // Validaciones
     if (!newImage.file) {
-      setSnackbar({
-        open: true,
-        message: 'Selecciona una imagen',
-        severity: 'warning'
-      })
-      return
+        setSnackbar({
+            open: true,
+            message: 'Selecciona una imagen',
+            severity: 'warning'
+        });
+        return;
     }
 
     if (!newImage.name.trim() || !newImage.description.trim() || 
         !newImage.points.trim() || !newImage.category.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Todos los campos son obligatorios',
-        severity: 'warning'
-      })
-      return
+        setSnackbar({
+            open: true,
+            message: 'Todos los campos son obligatorios',
+            severity: 'warning'
+        });
+        return;
     }
 
-    setUploading(true)
-    const formData = new FormData()
-    formData.append('aksi', 'AddImage')
-    formData.append('file', newImage.file)
-    formData.append('name', newImage.name.trim())
-    formData.append('description', newImage.description.trim())
-    formData.append('points', newImage.points.trim())
-    formData.append('category', newImage.category.trim())
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('aksi', 'AddImage');
+    formData.append('file', newImage.file);
+    formData.append('name', newImage.name.trim());
+    formData.append('description', newImage.description.trim());
+    formData.append('points', newImage.points.trim());
+    formData.append('category', newImage.category.trim());
 
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        body: formData
-      })
-      const result = await response.json()
-      
-      if (result.estado === 'success') {
-        setSnackbar({
-          open: true,
-          message: 'Imagen agregada exitosamente',
-          severity: 'success'
-        })
-        fetchImages()
-        resetForm()
-        setModalOpen(false)
-      } else {
-        setSnackbar({
-          open: true,
-          message: result.mensaje || 'Error al agregar',
-          severity: 'error'
-        })
-      }
+        // ✅ IMPORTANTE: Especificar método POST
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData
+            // NO agregues 'Content-Type': 'multipart/form-data' - el navegador lo hace solo
+        });
+
+        // ✅ Primero obtener el texto de la respuesta
+        const textResponse = await response.text();
+        console.log('Respuesta del servidor:', textResponse); // Para depuración
+        
+        // ✅ Intentar parsear como JSON
+        let result;
+        try {
+            result = JSON.parse(textResponse);
+        } catch (parseError) {
+            console.error('Error al parsear JSON:', parseError);
+            console.log('Respuesta completa:', textResponse);
+            
+            // Si el servidor devuelve HTML con errores de PHP
+            if (textResponse.includes('<br />') || textResponse.includes('<b>')) {
+                setSnackbar({
+                    open: true,
+                    message: 'Error del servidor. Revisa los logs de PHP.',
+                    severity: 'error'
+                });
+                setUploading(false);
+                return;
+            }
+            
+            throw new Error('Respuesta no es JSON válido');
+        }
+        
+        // Procesar resultado
+        if (result.estado === 'success') {
+            setSnackbar({
+                open: true,
+                message: 'Imagen agregada exitosamente',
+                severity: 'success'
+            });
+            await fetchImages(); // Esperar a que se recarguen las imágenes
+            resetForm();
+            setModalOpen(false);
+        } else {
+            setSnackbar({
+                open: true,
+                message: result.mensaje || 'Error al agregar',
+                severity: 'error'
+            });
+        }
     } catch (error) {
-      console.error("Error adding image:", error)
-      setSnackbar({
-        open: true,
-        message: 'Error de conexión',
-        severity: 'error'
-      })
+        console.error("Error adding image:", error);
+        setSnackbar({
+            open: true,
+            message: 'Error de conexión o respuesta inválida del servidor',
+            severity: 'error'
+        });
     } finally {
-      setUploading(false)
+        setUploading(false);
     }
-  }
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]

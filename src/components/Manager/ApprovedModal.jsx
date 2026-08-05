@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { 
   CheckCircle, 
   Close,
@@ -172,6 +172,8 @@ function ModalAprobada({
 
     // Estado para los integrantes (solo lectura)
     const [nombresIntegrantes, setNombresIntegrantes] = useState('')
+    // Estado para colaboradores adicionales
+    const [colaboradoresNombres, setColaboradoresNombres] = useState('')
 
     const fetchLideres = async () => {
         setLoadingLideres(true)
@@ -200,7 +202,32 @@ function ModalAprobada({
         
         // Inicializar estado de integrantes con datos existentes
         if (selectedItem) {
-            setNombresIntegrantes(selectedItem.integrantes_grupo || '')
+            // Para propuestas grupales, mostrar los integrantes del grupo
+            if (selectedItem.colaboracion === 'Sí') {
+                // Mostrar integrantes_grupo si existe
+                if (selectedItem.integrantes_grupo) {
+                    setNombresIntegrantes(selectedItem.integrantes_grupo)
+                } 
+                // Si no hay integrantes_grupo pero hay colaboradores, mostrarlos
+                else if (selectedItem.colaboradores && selectedItem.colaboradores.length > 0) {
+                    const nombres = selectedItem.colaboradores.map(colab => 
+                        colab.nombre_completo || colab.nn_colaborador
+                    ).join(', ')
+                    setNombresIntegrantes(nombres)
+                } else {
+                    setNombresIntegrantes('No hay integrantes registrados')
+                }
+            }
+            
+            // Siempre mostrar colaboradores si existen (para cualquier tipo de propuesta)
+            if (selectedItem.colaboradores && selectedItem.colaboradores.length > 0) {
+                const nombres = selectedItem.colaboradores.map(colab => 
+                    colab.nombre_completo || colab.nn_colaborador
+                ).join(', ')
+                setColaboradoresNombres(nombres)
+            } else {
+                setColaboradoresNombres('')
+            }
         }
     }, [selectedItem])
 
@@ -473,7 +500,7 @@ function ModalAprobada({
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                         <AccountCircle fontSize="small" />
                                                         <Typography variant="subtitle2" fontWeight="600">
-                                                            Autor
+                                                            Autor Principal
                                                         </Typography>
                                                     </Box>
                                                 }
@@ -564,7 +591,7 @@ function ModalAprobada({
                                                 <TextField
                                                     fullWidth
                                                     multiline
-                                                    rows={3}
+                                                    rows={4}
                                                     label={
                                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                             <GroupAdd fontSize="small" />
@@ -574,10 +601,46 @@ function ModalAprobada({
                                                         </Box>
                                                     }
                                                     value={nombresIntegrantes}
-                                                    onChange={(e) => setNombresIntegrantes(e.target.value)}
-                                                    placeholder="Lista de integrantes del grupo"
-                                                    disabled={!isEditing}
-                                                    helperText={!isEditing ? "Para editar, presione el botón 'Editar' en la sección Plan de Implementación" : "Liste los nombres completos de todos los integrantes"}
+                                                    InputProps={{
+                                                        readOnly: true,
+                                                    }}
+                                                    helperText="Personas que conforman el equipo de trabajo"
+                                                    FormHelperTextProps={{
+                                                        sx: { ml: 1.5, mt: 0.5, fontSize: '0.7rem' }
+                                                    }}
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-root': {
+                                                            backgroundColor: 'rgba(240, 253, 244, 0.5)',
+                                                            borderRadius: 2
+                                                        }
+                                                    }}
+                                                />
+                                            </Grid>
+                                        )}
+
+                                        {/* Mostrar colaboradores adicionales si existen y es grupal */}
+                                        {esGrupal && colaboradoresNombres && colaboradoresNombres !== nombresIntegrantes && (
+                                            <Grid item xs={12}>
+                                                <TextField
+                                                    fullWidth
+                                                    multiline
+                                                    rows={3}
+                                                    label={
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                            <PersonAdd fontSize="small" />
+                                                            <Typography variant="subtitle2" fontWeight="600">
+                                                                Colaboradores Adicionales
+                                                            </Typography>
+                                                        </Box>
+                                                    }
+                                                    value={colaboradoresNombres}
+                                                    InputProps={{
+                                                        readOnly: true,
+                                                    }}
+                                                    helperText="Personas que colaboran en la propuesta"
+                                                    FormHelperTextProps={{
+                                                        sx: { ml: 1.5, mt: 0.5, fontSize: '0.7rem' }
+                                                    }}
                                                     sx={{
                                                         '& .MuiOutlinedInput-root': {
                                                             backgroundColor: 'rgba(240, 253, 244, 0.5)',

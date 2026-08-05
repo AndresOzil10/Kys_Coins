@@ -449,16 +449,41 @@ function HomeManager() {
     }
     try {
       const respuesta = await enviarData(url, data)
-      if (respuesta.estado === 'success') {
-        setSelectedItem(respuesta.data[0])
-        if (selectedStatus === 'Liberada') {
-          setPuntosAsignados(respuesta.data[0].puntosAsignados || '')
+      if (respuesta.estado === 'success' && respuesta.data) {
+        let normalizedData
+        
+        // Caso 1: Es un array (propuesta individual)
+        if (Array.isArray(respuesta.data)) {
+          if (respuesta.data.length === 0) {
+            console.error("Array vacío recibido")
+            return
+          }
+          normalizedData = respuesta.data[0]
+        } 
+        // Caso 2: Es un objeto (propuesta grupal)
+        else if (typeof respuesta.data === 'object' && respuesta.data !== null) {
+          normalizedData = respuesta.data
         }
+        // Caso 3: Otro formato no esperado
+        else {
+          console.error("Formato de datos no esperado:", respuesta.data)
+          return
+        }
+        
+        console.log("Datos normalizados:", normalizedData)
+        setSelectedItem(normalizedData)
+        
+        if (selectedStatus === 'Liberada') {
+          setPuntosAsignados(normalizedData.puntosAsignados || '')
+        }
+      } else {
+        console.error("Error en la respuesta:", respuesta)
       }
     } catch (error) {
       console.error("Error fetching item details:", error)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleSave = async () => {
@@ -486,6 +511,8 @@ function HomeManager() {
         "comentarios": comentarios
       })
     }
+
+    console.log("Datos a enviar:", data)
     
     try {
       const respuesta = await enviarData(url, data)
